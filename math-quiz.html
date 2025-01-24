@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>חידון מתמטי</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Varela+Round&display=swap');
+
+        :root {
+            --primary: #4A90E2;
+            --background: #f0f2f5;
+            --text: #2C3E50;
+            --success: #4CAF50;
+            --error: #F44336;
+            --warning: #FFC107;
+            --light-bg: #f8fafc;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Varela Round', sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            padding: 0.5rem 1rem;
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .back-button:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .settings-container {
+            background: var(--light-bg);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .settings-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: var(--text);
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .select-wrapper {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        select {
+            padding: 0.5rem;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            background: white;
+        }
+
+.exercise {
+    background: var(--light-bg);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    direction: ltr; /* הכיוון משמאל לימין */
+}
+
+.exercise-text {
+    font-size: 1.2rem;
+    flex-grow: 1;
+    text-align: left; /* יישור לשמאל */
+}
+
+input[type="number"] {
+    width: 100px;
+    padding: 0.5rem;
+    border: 2px solid var(--primary);
+    border-radius: 6px;
+    font-size: 1.1rem;
+    text-align: right; /* התשובה מיושרת לימין */
+}
+.explanation {
+    direction: ltr;
+    text-align: left;
+}
+        .quiz-container {
+            display: none;
+            margin-top: 2rem;
+        }
+
+        .result {
+            margin-right: 1rem;
+            font-weight: bold;
+            min-width: 24px;
+            text-align: center;
+            display: none;
+        }
+
+        .result.correct {
+            color: var(--success);
+        }
+
+        .result.incorrect {
+            color: var(--error);
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        button:hover {
+            background: #357ABD;
+        }
+
+        .score-container {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: var(--light-bg);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .score {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .explanation {
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 1rem;
+            }
+
+            .checkbox-group {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+
+            select {
+                width: 100%;
+            }
+
+            .select-wrapper {
+                flex-direction: column;
+                align-items: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="window.location.href='index.html'">חזרה לתפריט</button>
+    
+    <div class="game-container">
+        <div class="header">
+            <h1>חידון מתמטי</h1>
+        </div>
+
+        <div class="settings-container">
+            <div class="settings-group">
+                <div class="settings-title">פעולות חשבון:</div>
+                <div class="checkbox-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="addition" checked>
+                        <label for="addition">חיבור (+)</label>
+                    </div>
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="subtraction" checked>
+                        <label for="subtraction">חיסור (-)</label>
+                    </div>
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="multiplication">
+                        <label for="multiplication">כפל (×)</label>
+                    </div>
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="division">
+                        <label for="division">חילוק (÷)</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <div class="settings-title">הגדרות נוספות:</div>
+                <div class="checkbox-group">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="allowNegative">
+                        <label for="allowNegative">תוצאות שליליות</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <div class="settings-title">טווח מספרים:</div>
+                <select id="numberRange">
+                    <option value="10">עד 10</option>
+                    <option value="20" selected>עד 20</option>
+                    <option value="50">עד 50</option>
+                    <option value="100">עד 100</option>
+                    <option value="200">עד 200</option>
+                    <option value="500">עד 500</option>
+                    <option value="1000">עד 1,000</option>
+                </select>
+            </div>
+
+            <div class="settings-group">
+                <div class="settings-title">מספר פעולות בתרגיל:</div>
+                <select id="operationsCount">
+                    <option value="1" selected>פעולה אחת</option>
+                    <option value="2">2 פעולות</option>
+                    <option value="3">3 פעולות</option>
+                    <option value="4">4 פעולות</option>
+                    <option value="5">5 פעולות</option>
+                </select>
+            </div>
+        </div>
+
+        <button onclick="startQuiz()">התחל חידון</button>
+
+        <div id="quizContainer" class="quiz-container">
+            <div id="exercises"></div>
+            <button onclick="checkAnswers()">בדוק תשובות</button>
+        </div>
+
+        <div id="scoreContainer" class="score-container">
+            <div class="score" id="score"></div>
+            <div class="explanation" id="explanation"></div>
+        </div>
+    </div>
+
+    <script>
+        class MathProblem {
+            constructor(maxNumber, allowNegative) {
+                this.maxNumber = maxNumber;
+                this.allowNegative = allowNegative;
+                this.steps = [];
+                this.finalResult = null;
+            }
+
+            calculateStep(a, operation, b) {
+                switch(operation) {
+                    case '+': return a + b;
+                    case '-': return a - b;
+                    case '×': return a * b;
+                    case '÷': 
+                        if (b === 0 || a % b !== 0) return null;
+                        return a / b;
+                }
+            }
+
+            isValidResult(result) {
+                if (result === null) return false;
+                if (!Number.isInteger(result)) return false;
+                if (Math.abs(result) > this.maxNumber) return false;
+                if (!this.allowNegative && result < 0) return false;
+                return true;
+            }
+
+            generateProblem(operationsCount, validOperations) {
+                if (validOperations.length === 0) return false;
+
+                // מספר ראשון
+                let firstNumber = 1 + Math.floor(Math.random() * this.maxNumber);
+                let currentResult = firstNumber;
+                this.steps = [firstNumber];
+
+                // הוספת פעולות
+                for (let i = 0; i < operationsCount; i++) {
+                    const operation = validOperations[Math.floor(Math.random() * validOperations.length)];
+                    let nextNumber;
+                    let tempResult;
+                    let attempts = 0;
+                    const maxAttempts = 50;
+
+                    // ניסיון למצוא מספר מתאים
+                    do {
+                        attempts++;
+                        nextNumber = 1 + Math.floor(Math.random() * this.maxNumber);
+                        tempResult = this.calculateStep(currentResult, operation, nextNumber);
+                    } while (!this.isValidResult(tempResult) && attempts < maxAttempts);
+
+                    if (attempts >= maxAttempts) return false;
+
+                    this.steps.push(operation);
+                    this.steps.push(nextNumber);
+                    currentResult = tempResult;
+                }
+
+                this.finalResult = currentResult;
+                return true;
+            }
+
+            toString() {
+    return `${this.steps.join(' ')} = `;  // התרגיל עצמו עם סימן שוויון בסוף
+}
+            getResult() {
+                return this.finalResult;
+            }
+        }
+
+        let currentProblems = [];
+
+        function getSelectedOperations() {
+            const operations = [];
+            if (document.getElementById('addition').checked) operations.push('+');
+            if (document.getElementById('subtraction').checked) operations.push('-');
+            if (document.getElementById('multiplication').checked) operations.push('×');
+            if (document.getElementById('division').checked) operations.push('÷');
+            return operations;
+        }
+
+        function startQuiz() {
+            const operationsCount = parseInt(document.getElementById('operationsCount').value);
+            const maxNumber = parseInt(document.getElementById('numberRange').value);
+            const allowNegative = document.getElementById('allowNegative').checked;
+            const operations = getSelectedOperations();
+
+            if (operations.length === 0) {
+                alert('יש לבחור לפחות פעולה חשבונית אחת');
+                return;
+            }
+
+            currentProblems = [];
+            const exercisesContainer = document.getElementById('exercises');
+            exercisesContainer.innerHTML = '';
+
+            for (let i = 0; i < 5; i++) {
+                const problem = new MathProblem(maxNumber, allowNegative);
+                let success = problem.generateProblem(operationsCount, operations);
+                
+                if (!success) {
+                    alert('לא הצלחנו ליצור תרגילים מתאימים. אנא שנה את ההגדרות ונסה שוב.');
+                    return;
+                }
+
+                currentProblems.push(problem);
+
+const exerciseDiv = document.createElement('div');
+exerciseDiv.className = 'exercise';
+exerciseDiv.innerHTML = `
+    <div class="exercise-text">${problem.toString()}</div>
+    <input type="number" id="answer${i}" style="text-align: right;">
+    <div class="result" id="result${i}"></div>
+`;
+                exercisesContainer.appendChild(exerciseDiv);
+            }
+
+            document.getElementById('quizContainer').style.display = 'block';
+            document.getElementById('scoreContainer').style.display = 'none';
+        }
+
+        function checkAnswers() {
+            let correct = 0;
+            const mistakes = [];
+
+            for (let i = 0; i < currentProblems.length; i++) {
+                const answer = parseInt(document.getElementById(`answer${i}`).value);
+                const resultDiv = document.getElementById(`result${i}`);
+                const correctAnswer = currentProblems[i].getResult();
+
+                if (!isNaN(answer) && answer === correctAnswer) {
+                    resultDiv.textContent = '✓';
+                    resultDiv.className = 'result correct';
+                    correct++;
+                } else {
+                    resultDiv.textContent = '✗';
+                    resultDiv.className = 'result incorrect';
+mistakes.push(`${currentProblems[i].toString()}${correctAnswer}`);
+                }
+                resultDiv.style.display = 'block';
+            }
+
+            const scoreContainer = document.getElementById('scoreContainer');
+            const score = document.getElementById('score');
+            const explanation = document.getElementById('explanation');
+
+            score.textContent = `הצלחת ${correct} מתוך 5 תרגילים`;
+            
+            if (mistakes.length > 0) {
+                explanation.innerHTML = 'פתרונות לתרגילים שגויים:<br>' + mistakes.join('<br>');
+            } else {
+                explanation.textContent = 'כל הכבוד! כל התשובות נכונות!';
+            }
+
+            scoreContainer.style.display = 'block';
+        }
+    </script>
+</body>
+</html>

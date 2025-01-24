@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>תפזורת מילים לילדים</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Varela+Round&display=swap');
+
+        :root {
+            --primary: #FF9F43;
+            --secondary: #54A0FF;
+            --success: #28C76F;
+            --background: #F8F9FA;
+            --text: #2D3436;
+            --grid-bg: #FFFFFF;
+            --cell-selected: #FFE4B8;
+            --cell-found: #B8FFD9;
+            --cell-hover: #FFF4E4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Varela Round', sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--text);
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        select, button {
+            padding: 0.8rem 1rem;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            outline: none;
+        }
+
+        select {
+            background: var(--background);
+            border: 2px solid var(--primary);
+            color: var(--text);
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .game-board {
+            display: grid;
+            gap: 4px;
+            background: var(--secondary);
+            padding: 8px;
+            border-radius: 15px;
+            margin: 1.5rem auto;
+            max-width: 600px;
+        }
+
+        .cell {
+            background: var(--grid-bg);
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            border-radius: 8px;
+        }
+
+        .cell:hover {
+            background: var(--cell-hover);
+            transform: scale(1.05);
+        }
+
+        .cell.selected {
+            background: var(--cell-selected);
+            transform: scale(1.1);
+        }
+
+        .cell.found {
+            background: var(--cell-found);
+            color: var(--success);
+        }
+
+        .word-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: var(--background);
+            border-radius: 15px;
+        }
+
+        .word-item {
+            padding: 0.8rem;
+            text-align: center;
+            background: white;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .word-item.found {
+            background: var(--cell-found);
+            text-decoration: line-through;
+            color: var(--success);
+        }
+
+        .status {
+            text-align: center;
+            margin: 1rem 0;
+            padding: 1rem;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--primary);
+            min-height: 3.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .hint-button {
+            background: var(--secondary);
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 1rem;
+            }
+            
+            .cell {
+                font-size: 1.2rem;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: var(--primary);
+            position: absolute;
+            animation: confetti 5s ease-in-out -2s infinite;
+            transform-origin: center;
+        }
+
+        @keyframes confetti {
+            0% { transform: translateY(0) rotateZ(0deg); opacity: 1; }
+            100% { transform: translateY(1000px) rotateZ(720deg); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🎯 תפזורת מילים 🎯</h1>
+            <p>מצאו את כל המילים המוסתרות!</p>
+        </div>
+
+        <div class="controls">
+            <select id="difficulty" onchange="newGame()">
+                <option value="easy">קל - התחלה</option>
+                <option value="medium">בינוני - מתקדם</option>
+                <option value="hard">קשה - אתגר</option>
+            </select>
+            <select id="category" onchange="newGame()">
+                <option value="animals">חיות</option>
+                <option value="colors">צבעים</option>
+                <option value="food">אוכל</option>
+                <option value="school">בית ספר</option>
+                <option value="family">משפחה</option>
+            </select>
+            <button onclick="newGame()">משחק חדש! 🎮</button>
+        </div>
+
+        <div class="status" id="status"></div>
+        <div class="game-board" id="board"></div>
+        <div class="word-list" id="wordList"></div>
+        <button class="hint-button" onclick="showHint()">רוצה רמז? 💡</button>
+    </div>
+
+    <script>
+        const ALL_WORDS = {
+                animals: ['כלב', 'חתול', 'דג', 'ארנב', 'פיל', 'אריה', 'זברה', 'קוף', 'נמר', 'תוכי', 'פרה', 'קרנף', 'תנין', 'ינשוף', 'צבי', 'נחש', 'גמל', 'דוב', 'ברווז', 'סוס', 'עכבר', 'כבשה', 'תרנגול', 'פינגווין', 'היפו'],
+                colors: ['אדום', 'כחול', 'ירוק', 'צהוב', 'סגול', 'חום', 'ורוד', 'לבן', 'שחור', 'תכלת', 'כתום', 'אפור', 'זהב', 'כסף', 'ארגמן', 'טורקיז', 'חרדל', 'בז', 'נחושת', 'ברונזה'],
+                food: ['לחם', 'חלב', 'גבינה', 'ביצה', 'עוגה', 'פיצה', 'פסטה', 'סלט', 'מרק', 'אורז', 'שניצל', 'המבורגר', 'ספגטי', 'קציצה', 'פלאפל', 'שוקולד', 'גלידה', 'תפוח', 'בננה', 'תות', 'אבטיח', 'מלון', 'ענב', 'תפוז', 'אגס'],
+                school: ['ספר', 'עט', 'דף', 'ילקוט', 'מורה', 'מחברת', 'עפרון', 'סרגל', 'מחק', 'טוש', 'מספריים', 'שעור', 'מבחן', 'שולחן', 'כיתה', 'תלמיד', 'לוח', 'חשבון', 'הפסקה', 'צלצול', 'מנהל', 'מזכירה', 'ספריה', 'חצר', 'אולם'],
+                family: ['אבי', 'ליזי', 'איתמר', 'יובל', 'רוני', 'רחל', 'אסתר', 'חיים', 'מירית', 'איציק', 'ליאל', 'איתי', 'נח', 'בר', 'מזי', 'רן', 'נאור', 'נעמה', 'רומי', 'אמסלם', 'דלאל', 'בורבאה', 'דיין']
+        };
+        const WORDS = {
+    animals: {
+        easy: () => getRandomWords('animals', 5),
+        medium: () => getRandomWords('animals', 5),
+        hard: () => getRandomWords('animals', 5)
+    },
+    colors: {
+        easy: () => getRandomWords('colors', 5),
+        medium: () => getRandomWords('colors', 5),
+        hard: () => getRandomWords('colors', 5)
+    },
+    food: {
+        easy: () => getRandomWords('food', 5),
+        medium: () => getRandomWords('food', 5),
+        hard: () => getRandomWords('food', 5)
+    },
+    school: {
+        easy: () => getRandomWords('school', 5),
+        medium: () => getRandomWords('school', 5),
+        hard: () => getRandomWords('school', 5)
+    },
+    family: {
+        easy: () => getRandomWords('family', 5),
+        medium: () => getRandomWords('family', 5),
+        hard: () => getRandomWords('family', 5)
+    }
+};
+        let board = [];
+        let size = 10;
+        let selectedCells = [];
+        let foundWords = new Set();
+        let currentWords = [];
+        let dragStart = null;
+        let isGameWon = false;
+
+        function createBoard() {
+            const boardElement = document.getElementById('board');
+            boardElement.innerHTML = '';
+            boardElement.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+            
+            for (let row = 0; row < size; row++) {
+                for (let col = 0; col < size; col++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.setAttribute('data-row', row);
+                    cell.setAttribute('data-col', col);
+                    cell.textContent = board[row][col];
+                    
+                    cell.addEventListener('mousedown', startSelection);
+                    cell.addEventListener('mouseover', updateSelection);
+                    cell.addEventListener('mouseup', endSelection);
+                    cell.addEventListener('touchstart', handleTouchStart, { passive: false });
+                    cell.addEventListener('touchmove', handleTouchMove, { passive: false });
+                    cell.addEventListener('touchend', handleTouchEnd, { passive: false });
+                    
+                    boardElement.appendChild(cell);
+                }
+            }
+        }
+
+        function initializeBoard() {
+            board = Array(size).fill().map(() => Array(size).fill(''));
+            const difficulty = document.getElementById('difficulty').value;
+            const category = document.getElementById('category').value;
+            
+            currentWords = WORDS[category][difficulty](); // שינוי כאן - קריאה לפונקציה
+            foundWords = new Set();
+            
+            currentWords.forEach(word => {
+                let placed = false;
+                let attempts = 0;
+                while (!placed && attempts < 100) {
+                    const direction = Math.floor(Math.random() * 8);
+                    const row = Math.floor(Math.random() * size);
+                    const col = Math.floor(Math.random() * size);
+                    
+                    if (canPlaceWord(word, row, col, direction)) {
+                        placeWord(word, row, col, direction);
+                        placed = true;
+                    }
+                    attempts++;
+                }
+            });
+            
+            const letters = 'אבגדהוזחטיכלמנסעפצקרשת';
+            for (let row = 0; row < size; row++) {
+                for (let col = 0; col < size; col++) {
+                    if (board[row][col] === '') {
+                        board[row][col] = letters[Math.floor(Math.random() * letters.length)];
+                    }
+                }
+            }
+            
+            updateWordList();
+        }
+
+        function canPlaceWord(word, row, col, direction) {
+            const dirs = [
+                [0, 1], [1, 0], [1, 1], [-1, 1],
+                [0, -1], [-1, 0], [-1, -1], [1, -1]
+            ];
+
+            const [dx, dy] = dirs[direction];
+            const len = word.length;
+
+            for (let i = 0; i < len; i++) {
+                const newRow = row + i * dx;
+                const newCol = col + i * dy;
+                
+                if (newRow < 0 || newRow >= size || newCol < 0 || newCol >= size) {
+                    return false;
+                }
+                
+                if (board[newRow][newCol] !== '' && board[newRow][newCol] !== word[i]) {
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+        function getRandomWords(category, count = 5) {
+    const words = [...ALL_WORDS[category]];
+    const result = [];
+    while (result.length < count && words.length > 0) {
+        const randomIndex = Math.floor(Math.random() * words.length);
+        result.push(words.splice(randomIndex, 1)[0]);
+    }
+    return result;
+        }
+
+
+        function placeWord(word, row, col, direction) {
+            const dirs = [
+                [0, 1], [1, 0], [1, 1], [-1, 1],
+                [0, -1], [-1, 0], [-1, -1], [1, -1]
+            ];
+            
+            const [dx, dy] = dirs[direction];
+            for (let i = 0; i < word.length; i++) {
+                board[row + i * dx][col + i * dy] = word[i];
+            }
+        }
+
+        function startSelection(e) {
+            if (isGameWon) return;
+            const cell = e.target;
+            dragStart = {
+                row: parseInt(cell.dataset.row),
+                col: parseInt(cell.dataset.col)
+            };
+            selectedCells = [dragStart];
+            updateSelectedCells();
+        }
+
+        function updateSelection(e) {
+            if (!dragStart || isGameWon) return;
+            
+            const cell = e.target;
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            
+            const dRow = row - dragStart.row;
+            const dCol = col - dragStart.col;
+            
+            if (Math.abs(dRow) === Math.abs(dCol) || dRow === 0 || dCol === 0) {
+                selectedCells = [];
+                const steps = Math.max(Math.abs(dRow), Math.abs(dCol));
+                const stepRow = dRow === 0 ? 0 : dRow / Math.abs(dRow);
+                const stepCol = dCol === 0 ? 0 : dCol / Math.abs(dCol);
+                
+                for (let i = 0; i <= steps; i++) {
+                    selectedCells.push({
+                        row: dragStart.row + stepRow * i,
+                        col: dragStart.col + stepCol * i
+                    });
+                }
+                updateSelectedCells();
+            }
+        }
+
+        function endSelection() {
+            if (!selectedCells.length || isGameWon) return;
+            
+            let word = selectedCells.map(cell => board[cell.row][cell.col]).join('');
+            let reversedWord = word.split('').reverse().join('');
+            
+            if (currentWords.includes(word) || currentWords.includes(reversedWord)) {
+                const foundWord = currentWords.includes(word) ? word : reversedWord;
+                foundWords.add(foundWord);
+                markFoundWord(word);
+                updateWordList();
+                
+                if (foundWords.size === currentWords.length) {
+                    celebrateWin();
+                }
+            }
+            
+            dragStart = null;
+            selectedCells = [];
+            updateSelectedCells();
+        }
+
+        function updateSelectedCells() {
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('selected');
+            });
+            
+            selectedCells.forEach(cell => {
+                const element = document.querySelector(`[data-row="${cell.row}"][data-col="${cell.col}"]`);
+                if (element) element.classList.add('selected');
+            });
+        }
+
+        function markFoundWord(word) {
+            selectedCells.forEach(cell => {
+                const element = document.querySelector(`[data-row="${cell.row}"][data-col="${cell.col}"]`);
+                if (element) element.classList.add('found');
+            });
+
+            playSuccessSound();
+        }
+
+        function updateWordList() {
+            const wordListElement = document.getElementById('wordList');
+            wordListElement.innerHTML = '';
+            
+            currentWords.forEach(word => {
+                const wordElement = document.createElement('div');
+                wordElement.className = `word-item ${foundWords.has(word) ? 'found' : ''}`;
+                wordElement.textContent = word;
+                wordListElement.appendChild(wordElement);
+            });
+        }
+
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const cell = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (cell && cell.classList.contains('cell')) {
+                startSelection({ target: cell });
+            }
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const cell = document.elementFromPoint(touch.clientX, touch.clientY);
+            if (cell && cell.classList.contains('cell')) {
+                updateSelection({ target: cell });
+            }
+        }
+
+        function handleTouchEnd(e) {
+            e.preventDefault();
+            endSelection();
+        }
+
+        function celebrateWin() {
+            isGameWon = true;
+            const status = document.getElementById('status');
+            status.textContent = '🎉 כל הכבוד! מצאת את כל המילים! 🎉';
+            status.style.fontSize = '1.5rem';
+            
+            // יצירת אפקט קונפטי
+            for (let i = 0; i < 50; i++) {
+                createConfetti();
+            }
+
+            playWinSound();
+        }
+
+        function createConfetti() {
+            const confetti = document.createElement('div');
+            confetti.className = 'confetti';
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 80%, 50%)`;
+            document.body.appendChild(confetti);
+            
+            setTimeout(() => confetti.remove(), 5000);
+        }
+
+        function showHint() {
+            const remainingWords = currentWords.filter(word => !foundWords.has(word));
+            if (remainingWords.length === 0) return;
+            
+            const randomWord = remainingWords[Math.floor(Math.random() * remainingWords.length)];
+            const status = document.getElementById('status');
+            status.textContent = `💡 רמז: חפשו את המילה "${randomWord}"`;
+            
+            setTimeout(() => {
+                if (!foundWords.has(randomWord)) {
+                    status.textContent = '';
+                }
+            }, 3000);
+        }
+
+        function playSuccessSound() {
+            const audio = new Audio('data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAbAAoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4ODg4P//////////////////////////AAAAAExhdmM1OC4xMwAAAAAAAAAAAAAAACQCgAAAAAAAAAGwzyd0qwAAAAAAAAAAAAAAAAD/+8DEAAAJdAN79BEAJedXbX81kFE9J2aXhIxggA0xM8jQqGfACApnpGhIHAYRgeD4Pg+D4IAQEID/E4PggBAEAEDuD4IAQEABABAD4PggBAEAEDvggJ98H3ggBAEP4ICfBACAIHwQE+CAPwfB8EBPvwQAoP+D/sPggBAEDv/4IAEBPggBgQAYP/+D4IA/+D4ICfY+DLiCZjcjKTCwQAhIxMlULGpOByiUrBAXJlf/++DE5oAd3Ztb+YYAo4Ezqz8wYFR85WYEAtMQRQUDwYDAkGBoGB5EiVZQuS4bii0zIYFDEVsTxNILlK5hcZwoLB9OtWXGYODKFSXNi5f+z/X/9f//fFy6GYkj0NxAOBwGAsBQGBAFAQSCIJyBHbHYDAEAYCgBAwBgEAMGIaEBpQgKHQGKBuSwlIQyDBHGYDyaBgFTMAQVEwHJlCYIwHGAKAYhD6jAXKUMA6BAEEQUBgOyHhM5RGD+Cw8EYPA+KhEDxYGgXJoLgZKQlRQLk2E6NAEEBC0IgEJRGJAyD4/RaJQ3IVCjAcmqGAyDYEAwIkcGwbE6MA6MwbkGPh6F4MgYB4gLxqGoHASBYEAkKgdEIHB4TSB3/f///2VJIVlSjuVlZKiiijtbIJ3KjkiGESo4MqYHAwBBAH2QU5lkTYoI8uQrESlhRQdB8NRcRMZCwNQwbhGGx8o2JBoEAYB4IgSDxQGhwTMCAoFw6AIdQuAwJEQqUaDAGAwGCYEQiGQoA4KigLjwDwGICMYCg8RKiUODYEYUBwOAiBCECQSEItDw2CAEiw6SvBAIhYOhEEIgJguEF4EgyAgDhgCAgOigJAEwQEwTAoDAoGAeEgQXJqAoaCgVCYEiAEBBSBYPIFAYWBAIhIFwCgIEBcAwOGoHAYIoKCRiPB0dEYCgSEgxDoKAQRAgBQILAIHwGILGQYJAqEwUCSAA2KBDOYjgIEQECAMAAYAlAYGgIQJ4BQRAgaJAEBAOFwEAwyAUEhADBwmEwcHwZAgZBZYpABAEQEBxAAoaIAyOD4eDYkA4FAUD8wEQOBQICAEtEdA4HB0ERERhAIDxKACGgYDIYwoBBRMRJgUPh0SQigsFhYfBkVCYBQKAw0JRMjIiCEIg0/////////+l+vu6rEhIVEqJVEhUVGBgYGAgUCAQQEBQIDBgUDzAwN4A');
+            audio.play();
+        }
+
+        function playWinSound() {
+            const audio = new Audio('data:audio/mpeg;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAeAAn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/v7+/39/f39/f39/f39/f39/f39/f39/f39/f39/f//////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAKAAAAAAAAAAfB855QQAAAAAAAAAAAAAAAAA//sQxAADwAABpAAAACAAADSAAAAETEFNRTMuOTkuNVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xDEKoPAAAGkAAAAIAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV');
+            audio.play();
+        }
+
+        function newGame() {
+            const difficulty = document.getElementById('difficulty').value;
+            switch(difficulty) {
+                case 'easy':
+                    size = 10;
+                    break;
+                case 'medium':
+                    size = 12;
+                    break;
+                case 'hard':
+                    size = 15;
+                    break;
+            }
+            
+            isGameWon = false;
+            document.getElementById('status').textContent = '';
+            document.getElementById('status').style.fontSize = '';
+            initializeBoard();
+            createBoard();
+        }
+
+        // מניעת סימון טקסט
+        document.addEventListener('selectstart', (e) => e.preventDefault());
+
+        // התחלת המשחק
+        newGame();
+    </script>
+</body>
+</html>
