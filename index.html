@@ -3,635 +3,421 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>משחקי לוח</title>
+    <title>פורטל משחקי חשיבה לילדים</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700&display=swap');
-
+        @import url('https://fonts.googleapis.com/css2?family=Varela+Round&display=swap');
+        
         :root {
-            --gradient-1: #4f46e5;
-            --gradient-2: #3730a3;
-            --primary: #6366f1;
-            --primary-hover: #4f46e5;
-            --secondary: #0ea5e9;
-            --secondary-hover: #0284c7;
-            --background: #f8fafc;
-            --text: #0f172a;
-            --text-light: #475569;
-            --player1: #ef4444;
-            --player2: #f59e0b;
-            --board: #ffffff;
-            --shadow-color: rgb(51 65 85 / 0.1);
+            --primary: #4A90E2;
+            --secondary: #50E3C2;
+            --success: #5CB85C;
+            --warning: #F0AD4E;
+            --danger: #D9534F;
+            --info: #5BC0DE;
+            --purple: #B96AC9;
+            --orange: #FF7043;
+            --teal: #009688;
+            --pink: #E91E63;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Rubik', sans-serif;
+            font-family: 'Varela Round', sans-serif;
         }
 
         body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
-            background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
-            padding: 2rem 1rem;
-            color: var(--text);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            padding: 2rem;
         }
 
         .container {
-            width: 100%;
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
         }
 
-        h1 {
-            color: white;
-            font-size: clamp(2rem, 5vw, 3.5rem);
+        .header {
             text-align: center;
-            margin-bottom: 2rem;
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            margin-bottom: 3rem;
+            color: #2C3E50;
         }
 
-        .game-container {
-            background: var(--board);
-            border-radius: 24px;
-            padding: 2rem;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
 
-        .header-grid {
+        .header p {
+            font-size: 1.2rem;
+            color: #666;
+        }
+
+        .games-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 1.5rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            padding: 1rem;
         }
 
-        .score-container {
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        .score-item {
-            background: var(--background);
-            padding: 1.5rem;
-            border-radius: 16px;
-            text-align: center;
-            font-weight: 500;
-            box-shadow: 0 4px 6px var(--shadow-color);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .score-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: var(--primary);
-            margin-top: 0.5rem;
-        }
-
-        .board {
-            padding: 1.5rem;
-            border-radius: 20px;
-            display: grid;
-            gap: 0.75rem;
-            margin: 2rem auto;
-            width: fit-content;
-            transition: all 0.3s ease;
-        }
-
-        .board.connect4 {
-            background: var(--primary);
-            grid-template-columns: repeat(7, minmax(45px, 1fr));
-        }
-
-        .board.tictactoe {
-            background: var(--background);
-            grid-template-columns: repeat(3, minmax(90px, 1fr));
-            max-width: 400px;
-        }
-
-        .cell {
-            aspect-ratio: 1;
+        .game-card {
             background: white;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .game-icon {
+            height: 160px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.5rem;
-            font-weight: 700;
-            user-select: none;
-            box-shadow: inset 0 2px 4px var(--shadow-color);
-        }
-
-        .connect4 .cell {
-            border-radius: 50%;
-        }
-
-        .cell:hover:not(.red):not(.yellow) {
-            transform: scale(1.05);
-            box-shadow: 
-                inset 0 2px 4px var(--shadow-color),
-                0 4px 8px var(--shadow-color);
-        }
-
-        @keyframes dropIn {
-            0% { transform: translateY(-200%); }
-            70% { transform: translateY(10%); }
-            85% { transform: translateY(-5%); }
-            100% { transform: translateY(0); }
-        }
-
-        @keyframes pop {
-            0% { transform: scale(0.8); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
-        }
-
-        .red, .yellow {
+            font-size: 4rem;
             color: white;
-            box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
-        .red { 
-            background: var(--player1);
-            animation: pop 0.3s ease-out;
-        }
-        
-        .yellow { 
-            background: var(--player2);
-            animation: pop 0.3s ease-out;
-        }
-
-        .controls {
-            display: grid;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        select {
-            padding: 1rem 1.5rem;
-            font-size: 1.1rem;
-            border-radius: 12px;
-            border: 2px solid var(--primary);
-            background: white;
-            cursor: pointer;
-            transition: all 0.2s;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%234f46e5' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: left 1rem center;
-            background-size: 1.2rem;
-            padding-left: 3rem;
-            font-family: 'Rubik', sans-serif;
-            color: var(--text);
-        }
-
-        select:hover {
-            border-color: var(--primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px var(--shadow-color);
-        }
-
-        #status {
-            background: var(--background);
+        .game-content {
             padding: 1.5rem;
-            border-radius: 16px;
-            text-align: center;
-            font-size: 1.25rem;
-            font-weight: 500;
-            margin: 1.5rem 0;
-            box-shadow: 0 4px 6px var(--shadow-color);
-            color: var(--text);
         }
 
-        button {
-            background: var(--secondary);
+        .game-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #2C3E50;
+        }
+
+        .game-description {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 1rem;
+            min-height: 60px;
+        }
+
+        .game-button {
+            display: inline-block;
+            padding: 0.8rem 1.5rem;
+            background-color: var(--primary);
             color: white;
-            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 25px;
+            transition: background-color 0.3s ease;
             border: none;
-            border-radius: 12px;
             cursor: pointer;
-            font-size: 1.1rem;
-            font-weight: 600;
-            transition: all 0.2s;
+            font-size: 1rem;
             width: 100%;
-            font-family: 'Rubik', sans-serif;
+            text-align: center;
         }
 
-        button:hover {
-            background: var(--secondary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px var(--shadow-color);
+        .game-button:hover {
+            background-color: #357ABD;
+        }
+
+        .game-age {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(255,255,255,0.9);
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* צבעי רקע לכרטיסי משחק */
+        .bg-primary { background-color: var(--primary); }
+        .bg-secondary { background-color: var(--secondary); }
+        .bg-success { background-color: var(--success); }
+        .bg-warning { background-color: var(--warning); }
+        .bg-danger { background-color: var(--danger); }
+        .bg-info { background-color: var(--info); }
+        .bg-purple { background-color: var(--purple); }
+        .bg-orange { background-color: var(--orange); }
+        .bg-teal { background-color: var(--teal); }
+        .bg-pink { background-color: var(--pink); }
+
+        /* תגי קטגוריות */
+        .game-tags {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .game-tag {
+            padding: 0.2rem 0.8rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: white;
+            background-color: rgba(0,0,0,0.1);
         }
 
         @media (max-width: 768px) {
-            .game-container {
-                padding: 1.5rem;
+            .games-grid {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 1rem;
             }
 
-            .header-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .board.connect4 .cell {
-                width: min(11vw, 45px);
-            }
-
-            .board.tictactoe .cell {
-                width: min(25vw, 90px);
+            .header h1 {
                 font-size: 2rem;
             }
-        }
 
-        @media (max-width: 480px) {
-            body {
-                padding: 1rem;
-            }
-
-            h1 {
-                font-size: 1.8rem;
-            }
-
-            .game-container {
-                padding: 1rem;
-            }
-
-            .board {
-                padding: 0.75rem;
-                gap: 0.5rem;
-            }
-
-            .cell {
-                font-size: 2rem;
+            .header p {
+                font-size: 1rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>משחקי לוח</h1>
-        <div class="game-container">
-            <div class="header-grid">
-                <div class="score-container">
-                    <div class="score-item">
-                        שחקן 1
-                        <div class="score-value" id="playerScore">0</div>
-                    </div>
+<div class="container">
+    <header class="header">
+        <h1>🎮 פורטל משחקי חשיבה לילדים</h1>
+        <p>בואו לשחק, ללמוד ולהתפתח עם מגוון משחקים מאתגרים</p>
+    </header>
+
+    <div class="games-grid">
+        <!-- איקס עיגול -->
+        <div class="game-card">
+            <div class="game-icon bg-primary">⭕</div>
+            <div class="game-age">גיל: 5+</div>
+            <div class="game-content">
+                <h2 class="game-title">איקס עיגול</h2>
+                <div class="game-tags">
+                    <span class="game-tag">אסטרטגיה</span>
+                    <span class="game-tag">חשיבה</span>
                 </div>
-                <div class="score-container">
-                    <div class="score-item">
-                        שחקן 2
-                        <div class="score-value" id="computerScore">0</div>
+                <p class="game-description">משחק חשיבה קלאסי לפיתוח אסטרטגיה ותכנון מהלכים</p>
+                <button class="game-button" onclick="window.location.href='tictactoe.html'">שחק עכשיו</button>
+            </div>
+        </div>
+
+        <!-- 4 בשורה -->
+        <div class="game-card">
+            <div class="game-icon bg-secondary">🔵</div>
+            <div class="game-age">גיל: 6+</div>
+            <div class="game-content">
+                <h2 class="game-title">4 בשורה</h2>
+                <div class="game-tags">
+                    <span class="game-tag">אסטרטגיה</span>
+                    <span class="game-tag">תכנון</span>
+                </div>
+                <p class="game-description">משחק אסטרטגי מהנה לפיתוח חשיבה מרחבית</p>
+                <button class="game-button" onclick="window.location.href='connect4.html'">שחק עכשיו</button>
+            </div>
+        </div>
+
+        <!-- סודוקו -->
+        <div class="game-card">
+            <div class="game-icon bg-success">🔢</div>
+            <div class="game-age">גיל: 8+</div>
+            <div class="game-content">
+                <h2 class="game-title">סודוקו</h2>
+                <div class="game-tags">
+                    <span class="game-tag">לוגיקה</span>
+                    <span class="game-tag">מספרים</span>
+                </div>
+                <p class="game-description">חידת מספרים מאתגרת לפיתוח חשיבה לוגית</p>
+                <button class="game-button" onclick="window.location.href='sudoku.html'">שחק עכשיו</button>
+            </div>
+        </div>
+
+            <!-- חידון מתמטי -->
+            <div class="game-card">
+                <div class="game-icon bg-warning">➗</div>
+                <div class="game-age">גיל: 7+</div>
+                <div class="game-content">
+                    <h2 class="game-title">חידון מתמטי</h2>
+                    <div class="game-tags">
+                        <span class="game-tag">מתמטיקה</span>
+                        <span class="game-tag">חישובים</span>
                     </div>
+                    <p class="game-description">תרגילי מתמטיקה מותאמים לגיל ולרמה</p>
+                    <button class="game-button" onclick="startGame('mathQuiz')">שחק עכשיו</button>
                 </div>
             </div>
-            <div class="controls">
-                <select id="gameType">
-                    <option value="connect4">4 בשורה</option>
-                    <option value="tictactoe">איקס עיגול</option>
-                </select>
-                <select id="gameMode">
-                    <option value="human">שחקן נגד שחקן</option>
-                    <option value="computer">שחקן נגד מחשב</option>
-                </select>
+
+            <!-- שחמט קטן -->
+            <div class="game-card">
+                <div class="game-icon bg-danger">♟️</div>
+                <div class="game-age">גיל: 8+</div>
+                <div class="game-content">
+                    <h2 class="game-title">שחמט קטן</h2>
+                    <div class="game-tags">
+                        <span class="game-tag">אסטרטגיה</span>
+                        <span class="game-tag">תכנון</span>
+                    </div>
+                    <p class="game-description">גרסה מפושטת של שחמט לפיתוח חשיבה אסטרטגית</p>
+                    <button class="game-button" onclick="window.location.href='MiniChess.html'">שחק עכשיו</button>
+                </div>
             </div>
-            <div id="status">תור שחקן 1</div>
-            <div class="board connect4" id="board"></div>
-            <button onclick="resetGame()">משחק חדש</button>
+
+            <!-- מגדלי האנוי -->
+            <div class="game-card">
+                <div class="game-icon bg-info">🗼</div>
+                <div class="game-age">גיל: 9+</div>
+                <div class="game-content">
+                    <h2 class="game-title">מגדלי האנוי</h2>
+                    <div class="game-tags">
+                        <span class="game-tag">לוגיקה</span>
+                        <span class="game-tag">תכנון</span>
+                    </div>
+                    <p class="game-description">חידת מגדלים קלאסית לפיתוח חשיבה לוגית</p>
+                    <button class="game-button" onclick="startGame('hanoi')">שחק עכשיו</button>
+                </div>
+            </div>
+
+            <!-- זיכרון -->
+            <div class="game-card">
+                <div class="game-icon bg-purple">🎴</div>
+                <div class="game-age">גיל: 5+</div>
+                <div class="game-content">
+                    <h2 class="game-title">משחק זיכרון</h2>
+                    <div class="game-tags">
+                        <span class="game-tag">זיכרון</span>
+                        <span class="game-tag">ריכוז</span>
+                    </div>
+                    <p class="game-description">משחק זיכרון קלאסי לפיתוח ריכוז וזיכרון חזותי</p>
+                    <button class="game-button" onclick="startGame('memory')">שחק עכשיו</button>
+                </div>
+            </div>
+
+            <!-- תפזורת מילים -->
+            <div class="game-card">
+                <div class="game-icon bg-orange">📝</div>
+                <div class="game-age">גיל: 7+</div>
+                <div class="game-content">
+                    <h2 class="game-title">תפזורת מילים</h2>
+                    <div class="game-tags">
+                        <span class="game-tag">שפה</span>
+                        <span class="game-tag">חיפוש</span>
+                    </div>
+                    <p class="game-description">חיפוש מילים מהנה לפיתוח אוצר מילים</p>
+                    <button class="game-button" onclick="window.location.href='Findword.html'">שחק עכשיו</button>
+                </div>
+            </div>
+
+            <!-- פאזל הזזה -->
+            <div class="game-card">
+                <div class="game-icon bg-teal">🧩</div>
+                <div class="game-age">גיל: 6+</div>
+                <div class="game-content">
+                    <h2 class="game-title">פאזל הזזה</h2>
+                    <div class="game-tags">
+                        <span class="game-tag">חשיבה מרחבית</span>
+                        <span class="game-tag">תכנון</span>
+                    </div>
+                    <p class="game-description">פאזל הזזת אריחים לפיתוח חשיבה מרחבית</p>
+                    <button class="game-button" onclick="startGame('slidingPuzzle')">שחק עכשיו</button>
+                </div>
+            </div>
+
+            <!-- סדרות חשבוניות -->
+            <div class="game-card">
+                <div class="game-icon bg-pink">🔄</div>
+                <div class="game-age">גיל: 8+</div>
+                <div class="game-content">
+                    <h2 class="game-title">סדרות חשבוניות</h2>
+                    <div class="game-tags">
+                        <span class="game-tag">מתמטיקה</span>
+                        <span class="game-tag">דפוסים</span>
+                    </div>
+                    <p class="game-description">השלמת סדרות מספרים לפיתוח חשיבה מתמטית</p>
+                    <button class="game-button" onclick="startGame('numberSequence')">שחק עכשיו</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // קונסטנטות
-        const CONNECT4_ROWS = 6;
-        const CONNECT4_COLS = 7;
-        const TICTACTOE_SIZE = 3;
-
-        // משתנים גלובליים
-        let currentPlayer = 1;
-        let board = [];
-        let gameActive = true;
-        let scores = { player: 0, computer: 0 };
-        let isComputerGame = false;
-        let isAnimating = false;
-        let currentGameType = 'connect4';
-
-        // מאזיני אירועים
-        document.getElementById('gameMode').addEventListener('change', function(e) {
-            isComputerGame = e.target.value === 'computer';
-            resetGame();
-        });
-
-        document.getElementById('gameType').addEventListener('change', function(e) {
-            currentGameType = e.target.value;
-            const boardElement = document.getElementById('board');
-            boardElement.className = `board ${currentGameType}`;
-            resetGame();
-        });
-
-        // יצירת לוח המשחק
-        function createBoard() {
-            const boardElement = document.getElementById('board');
-            boardElement.innerHTML = '';
-            
-            const rows = currentGameType === 'connect4' ? CONNECT4_ROWS : TICTACTOE_SIZE;
-            const cols = currentGameType === 'connect4' ? CONNECT4_COLS : TICTACTOE_SIZE;
-            
-            board = Array(rows).fill().map(() => Array(cols).fill(0));
-            
-            for (let row = 0; row < rows; row++) {
-                for (let col = 0; col < cols; col++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'cell';
-                    cell.dataset.row = row;
-                    cell.dataset.col = col;
-                    cell.onclick = () => currentGameType === 'connect4' ? 
-                        makeConnect4Move(col) : makeTicTacToeMove(row, col);
-                    boardElement.appendChild(cell);
-                }
+        // מערך של המשחקים הזמינים והסטטוס שלהם
+        const games = {
+            tictactoe: {
+                name: 'איקס עיגול',
+                ready: true
+            },
+            connect4: {
+                name: '4 בשורה',
+                ready: true
+            },
+            sudoku: {
+                name: 'סודוקו',
+                ready: true
+            },
+            mathQuiz: {
+                name: 'חידון מתמטי',
+                ready: true
+            },
+            miniChess: {
+                name: 'שחמט קטן',
+                ready: false
+            },
+            hanoi: {
+                name: 'מגדלי האנוי',
+                ready: false
+            },
+            memory: {
+                name: 'משחק זיכרון',
+                ready: false
+            },
+            wordSearch: {
+                name: 'תפזורת מילים',
+                ready: false
+            },
+            slidingPuzzle: {
+                name: 'פאזל הזזה',
+                ready: false
+            },
+            numberSequence: {
+                name: 'סדרות חשבוניות',
+                ready: false
             }
-        }
+        };
 
-        // טיפול במהלכי המשחק
-        function makeConnect4Move(col) {
-            if (!gameActive || isAnimating || (isComputerGame && currentPlayer === 2)) return;
-            
-            if (playConnect4Move(col)) {
-                if (isComputerGame && gameActive) {
-                    setTimeout(computerMove, 500);
-                }
-            }
-        }
-
-        function makeTicTacToeMove(row, col) {
-            if (!gameActive || board[row][col] !== 0 || (isComputerGame && currentPlayer === 2)) return;
-            
-            makeMove(row, col);
-            
-            if (isComputerGame && gameActive && currentPlayer === 2) {
-                setTimeout(computerMove, 500);
-            }
-        }
-
-        function makeMove(row, col) {
-            board[row][col] = currentPlayer;
-            updateCell(row, col);
-            
-            if (checkWin(row, col)) {
-                handleWin();
-            } else if (checkDraw()) {
-                document.getElementById('status').textContent = 'תיקו!';
-                gameActive = false;
-            } else {
-                currentPlayer = currentPlayer === 1 ? 2 : 1;
-                updateStatus();
-            }
-        }
-
-        function playConnect4Move(col) {
-            const row = getNextRow(col);
-            if (row === -1) return false;
-
-            isAnimating = true;
-            board[row][col] = currentPlayer;
-            
-            const cells = document.getElementsByClassName('cell');
-            let currentRow = 0;
-            const interval = setInterval(() => {
-                if (currentRow > 0) {
-                    const prevIndex = (currentRow - 1) * CONNECT4_COLS + col;
-                    cells[prevIndex].className = 'cell';
-                }
-                const index = currentRow * CONNECT4_COLS + col;
-              cells[index].className = `cell ${currentPlayer === 1 ? 'red' : 'yellow'}`;
-                
-                if (currentRow === row) {
-                    clearInterval(interval);
-                    isAnimating = false;
-                    if (checkWin(row, col)) {
-                        handleWin();
-                    } else if (checkDraw()) {
-                        document.getElementById('status').textContent = 'תיקו!';
-                        gameActive = false;
-                    } else {
-                        currentPlayer = currentPlayer === 1 ? 2 : 1;
-                        updateStatus();
-                    }
-                }
-                currentRow++;
-            }, 50);
-
-            return true;
-        }
-
-        function updateCell(row, col) {
-            const cells = document.getElementsByClassName('cell');
-            const index = row * (currentGameType === 'connect4' ? CONNECT4_COLS : TICTACTOE_SIZE) + col;
-            cells[index].textContent = currentPlayer === 1 ? '×' : '○';
-            cells[index].className = `cell ${currentPlayer === 1 ? 'red' : 'yellow'}`;
-        }
-
-        // מהלכי המחשב
-        function computerMove() {
-            if (!gameActive) return;
-            
-            if (currentGameType === 'connect4') {
-                computerConnect4Move();
-            } else {
-                computerTicTacToeMove();
-            }
-        }
-
-        function computerConnect4Move() {
-            // בדיקת מהלך מנצח
-            for (let col = 0; col < CONNECT4_COLS; col++) {
-                let row = getNextRow(col);
-                if (row === -1) continue;
-                
-                board[row][col] = 2;
-                if (checkWin(row, col)) {
-                    board[row][col] = 0;
-                    playConnect4Move(col);
-                    return;
-                }
-                board[row][col] = 0;
-            }
-
-            // בדיקת חסימת מהלך מנצח של היריב
-            for (let col = 0; col < CONNECT4_COLS; col++) {
-                let row = getNextRow(col);
-                if (row === -1) continue;
-                
-                board[row][col] = 1;
-                if (checkWin(row, col)) {
-                    board[row][col] = 0;
-                    playConnect4Move(col);
-                    return;
-                }
-                board[row][col] = 0;
-            }
-            
-            // מהלך אקראי
-            let validMoves = [];
-            for (let col = 0; col < CONNECT4_COLS; col++) {
-                if (getNextRow(col) !== -1) validMoves.push(col);
-            }
-            
-            if (validMoves.length > 0) {
-                let randomCol = validMoves[Math.floor(Math.random() * validMoves.length)];
-                playConnect4Move(randomCol);
-            }
-        }
-
-        function computerTicTacToeMove() {
-            // מציאת מהלך מנצח
-            for (let row = 0; row < TICTACTOE_SIZE; row++) {
-                for (let col = 0; col < TICTACTOE_SIZE; col++) {
-                    if (board[row][col] === 0) {
-                        board[row][col] = 2;
-                        if (checkWin(row, col)) {
-                            board[row][col] = 0;
-                            makeMove(row, col);
-                            return;
-                        }
-                        board[row][col] = 0;
-                    }
-                }
-            }
-
-            // חסימת מהלך מנצח של היריב
-            for (let row = 0; row < TICTACTOE_SIZE; row++) {
-                for (let col = 0; col < TICTACTOE_SIZE; col++) {
-                    if (board[row][col] === 0) {
-                        board[row][col] = 1;
-                        if (checkWin(row, col)) {
-                            board[row][col] = 0;
-                            makeMove(row, col);
-                            return;
-                        }
-                        board[row][col] = 0;
-                    }
-                }
-            }
-
-            // תפיסת המרכז אם פנוי
-            if (board[1][1] === 0) {
-                makeMove(1, 1);
+        function startGame(gameType) {
+            if (!games[gameType].ready) {
+                alert('משחק זה בפיתוח! נא לנסות משחק אחר בינתיים.');
                 return;
             }
 
-            // תפיסת פינה פנויה
-            const corners = [[0,0], [0,2], [2,0], [2,2]];
-            const emptyCorners = corners.filter(([r,c]) => board[r][c] === 0);
-            if (emptyCorners.length > 0) {
-                const [row, col] = emptyCorners[Math.floor(Math.random() * emptyCorners.length)];
-                makeMove(row, col);
-                return;
-            }
+            // שמירת סוג המשחק הנבחר
+            localStorage.setItem('selectedGame', gameType);
 
-            // תפיסת משבצת פנויה כלשהי
-            for (let row = 0; row < TICTACTOE_SIZE; row++) {
-                for (let col = 0; col < TICTACTOE_SIZE; col++) {
-                    if (board[row][col] === 0) {
-                        makeMove(row, col);
-                        return;
-                    }
-                }
+            // הפניה לדף המשחק המתאים
+            switch(gameType) {
+                case 'tictactoe':
+                case 'connect4':
+                case 'sudoku':
+                    window.location.href = `game.html?type=${gameType}`;
+                    break;
+                case 'mathQuiz':
+                    window.location.href = 'math-quiz.html';
+                    break;
+                default:
+                    alert('משחק זה עדיין לא זמין. אנא נסו שוב בקרוב!');
             }
         }
 
-        // פונקציות עזר
-        function getNextRow(col) {
-            for (let row = CONNECT4_ROWS - 1; row >= 0; row--) {
-                if (board[row][col] === 0) return row;
-            }
-            return -1;
-        }
+        // פונקציה להצגת אנימציה בעת העברת עכבר מעל כרטיס משחק
+        document.querySelectorAll('.game-card').forEach(card => {
+            card.addEventListener('mouseover', function() {
+                this.style.transform = 'translateY(-10px)';
+            });
 
-        function handleWin() {
-            const winner = currentPlayer;
-            if (isComputerGame) {
-                if (winner === 1) {
-                    scores.player++;
-                    document.getElementById('playerScore').textContent = scores.player;
-                } else {
-                    scores.computer++;
-                    document.getElementById('computerScore').textContent = scores.computer;
-                }
-            }
-            document.getElementById('status').textContent = 
-                `${winner === 1 ? 'שחקן 1' : (isComputerGame ? 'מחשב' : 'שחקן 2')} ניצח!`;
-            gameActive = false;
-        }
-
-        function updateStatus() {
-            if (!gameActive) return;
-            const statusText = isComputerGame ? 
-                (currentPlayer === 1 ? 'תורך לשחק' : 'תור המחשב') :
-                `תור שחקן ${currentPlayer}`;
-            document.getElementById('status').textContent = statusText;
-        }
-
-        function checkWin(row, col) {
-            const player = board[row][col];
-            
-            if (currentGameType === 'connect4') {
-                const directions = [
-                    [[0,1], [0,-1]], // horizontal
-                    [[1,0], [-1,0]], // vertical
-                    [[1,1], [-1,-1]], // diagonal
-                    [[1,-1], [-1,1]] // other diagonal
-                ];
-
-                for (let dir of directions) {
-                    let count = 1;
-                    for (let [dx, dy] of dir) {
-                        let r = row + dx;
-                        let c = col + dy;
-                        while (r >= 0 && r < CONNECT4_ROWS && c >= 0 && c < CONNECT4_COLS && board[r][c] === player) {
-                            count++;
-                            r += dx;
-                            c += dy;
-                        }
-                    }
-                    if (count >= 4) return true;
-                }
-            } else {
-                // בדיקת שורה
-                if (board[row].every(cell => cell === player)) return true;
-                
-                // בדיקת עמודה
-                if (board.every(r => r[col] === player)) return true;
-                
-                // בדיקת אלכסונים
-                if (row === col && [0,1,2].every(i => board[i][i] === player)) return true;
-                if (row + col === 2 && [0,1,2].every(i => board[i][2-i] === player)) return true;
-            }
-            
-            return false;
-        }
-
-        function checkDraw() {
-            return board.every(row => row.every(cell => cell !== 0));
-        }
-
-        function resetGame() {
-            createBoard();
-            currentPlayer = 1;
-            gameActive = true;
-            isAnimating = false;
-            updateStatus();
-        }
-
-        // התחלת המשחק
-        createBoard();
+            card.addEventListener('mouseout', function() {
+                this.style.transform = 'translateY(0)';
+            });
+        });
     </script>
 </body>
 </html>
