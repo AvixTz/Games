@@ -100,7 +100,6 @@
         }
 
         .board-8x8 { grid-template-columns: repeat(8, 1fr); }
-        .board-6x6 { grid-template-columns: repeat(6, 1fr); }
 
         .cell {
             aspect-ratio: 1;
@@ -117,7 +116,7 @@
         .cell.dark { background-color: var(--board-dark); }
         .cell.selected { background-color: var(--highlight); }
 
-        .cell.check { 
+        .cell.check {
             background-color: var(--check);
             animation: pulse 2s infinite;
         }
@@ -288,10 +287,10 @@
         </div>
 
         <div class="game-settings">
+            <!-- Only 8x8 option is available now -->
             <div class="setting-group">
                 <div class="setting-label">סוג משחק:</div>
                 <select id="gameType" onchange="changeGameType()">
-                    <option value="mini">שחמט קטן (6x6)</option>
                     <option value="regular">שחמט רגיל (8x8)</option>
                 </select>
             </div>
@@ -335,9 +334,10 @@
             <button onclick="showHelp()">הוראות משחק</button>
         </div>
     </div>
-<script>
+
+    <script>
         // הגדרות בסיסיות
-        let BOARD_SIZE = 6;
+        let BOARD_SIZE = 8; // Default to 8x8
         let board = [];
         let selectedCell = null;
         let currentPlayer = 'white';
@@ -386,23 +386,18 @@
         }
 
         function changeGameType() {
+            // Only 8x8 remains; we can keep the code flexible if you decide to add more types in future
             const gameType = document.getElementById('gameType').value;
-            BOARD_SIZE = gameType === 'regular' ? 8 : 6;
+            BOARD_SIZE = 8; 
             resetGame();
         }
 
         function showHelp() {
-            const gameType = document.getElementById('gameType').value;
             const isComputer = document.getElementById('gameMode').value === 'computer';
-            const helpText = gameType === 'regular' ? 
+            const helpText = 
                 `הוראות משחק שחמט רגיל:
                 1. המשחק מתנהל על לוח 8x8
                 2. כל שחקן מתחיל עם 16 כלים
-                3. המטרה היא לבצע מט למלך היריב
-                4. ${isComputer ? 'השחקן הלבן מתחיל' : 'הלבן מתחיל'}` :
-                `הוראות משחק שחמט קטן:
-                1. המשחק מתנהל על לוח 6x6
-                2. כל שחקן מתחיל עם מספר מצומצם של כלים
                 3. המטרה היא לבצע מט למלך היריב
                 4. ${isComputer ? 'השחקן הלבן מתחיל' : 'הלבן מתחיל'}`;
             alert(helpText);
@@ -427,16 +422,8 @@
         // פונקציות יצירת לוח
         function createBoard() {
             board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(null));
-            const gameType = document.getElementById('gameType').value;
-            setupInitialPosition(gameType);
+            setupRegularBoard();
             renderBoard();
-        }
-function setupInitialPosition(gameType) {
-            if (gameType === 'regular') {
-                setupRegularBoard();
-            } else {
-                setupMiniBoard();
-            }
         }
 
         function setupRegularBoard() {
@@ -469,24 +456,6 @@ function setupInitialPosition(gameType) {
             board[7][5] = PIECES.WHITE_BISHOP;
             board[7][6] = PIECES.WHITE_KNIGHT;
             board[7][7] = PIECES.WHITE_ROOK;
-        }
-
-        function setupMiniBoard() {
-            // כלים שחורים
-            board[0][2] = PIECES.BLACK_KING;
-            board[0][3] = PIECES.BLACK_ROOK;
-            board[0][4] = PIECES.BLACK_KNIGHT;
-            board[1][0] = PIECES.BLACK_PAWN;
-            board[1][3] = PIECES.BLACK_PAWN;
-            board[1][5] = PIECES.BLACK_PAWN;
-
-            // כלים לבנים
-            board[5][1] = PIECES.WHITE_KNIGHT;
-            board[5][2] = PIECES.WHITE_ROOK;
-            board[5][3] = PIECES.WHITE_KING;
-            board[4][0] = PIECES.WHITE_PAWN;
-            board[4][2] = PIECES.WHITE_PAWN;
-            board[4][5] = PIECES.WHITE_PAWN;
         }
 
         function renderBoard() {
@@ -620,7 +589,8 @@ function setupInitialPosition(gameType) {
             
             return moves;
         }
-// חישוב מהלכים וטיפול במהלכים
+
+        // חישוב מהלכים וטיפול במהלכים
         function calculatePossibleMoves(row, col) {
             const piece = board[row][col];
             if (!piece) return [];
@@ -669,15 +639,30 @@ function setupInitialPosition(gameType) {
         }
 
         function makeMove(fromRow, fromCol, toRow, toCol) {
+            const movingPiece = board[fromRow][fromCol];
             const capturedPiece = board[toRow][toCol];
             if (capturedPiece) {
                 capturedPieces[capturedPiece.color].push(capturedPiece);
                 updateCapturedPieces();
             }
 
-            board[toRow][toCol] = board[fromRow][fromCol];
+            // Move the piece
+            board[toRow][toCol] = movingPiece;
             board[fromRow][fromCol] = null;
 
+            // **Pawn Promotion** check
+            if (movingPiece.type === 'pawn') {
+                // If white pawn reaches top row
+                if (movingPiece.color === 'white' && toRow === 0) {
+                    board[toRow][toCol] = PIECES.WHITE_QUEEN;
+                }
+                // If black pawn reaches bottom row
+                else if (movingPiece.color === 'black' && toRow === BOARD_SIZE - 1) {
+                    board[toRow][toCol] = PIECES.BLACK_QUEEN;
+                }
+            }
+
+            // Switch turn
             currentPlayer = currentPlayer === 'white' ? 'black' : 'white';
             updateStatus();
 
@@ -752,49 +737,44 @@ function setupInitialPosition(gameType) {
             return allMoves[Math.floor(Math.random() * allMoves.length)];
         }
 
-function makeMediumMove() {
-    const allMoves = getAllPossibleMoves('black');
-    if (allMoves.length === 0) return null;
+        function makeMediumMove() {
+            const allMoves = getAllPossibleMoves('black');
+            if (allMoves.length === 0) return null;
 
-    // שינוי שיטת ההערכה
-    const scoredMoves = allMoves.map(move => {
-        // יצירת עותק עמוק של הלוח
-        const tempBoard = JSON.parse(JSON.stringify(board));
-        
-        // ביצוע המהלך על הלוח הזמני
-        tempBoard[move.toRow][move.toCol] = tempBoard[move.fromRow][move.fromCol];
-        tempBoard[move.fromRow][move.fromCol] = null;
-        
-        // הערכת המצב לאחר המהלך
-        let score = 0;
-        
-        // אם זה מהלך שתופס כלי
-        if (board[move.toRow][move.toCol]) {
-            score += PIECE_VALUES[board[move.toRow][move.toCol].type] * 2;
-        }
-        
-        // בדיקה אם המהלך מוביל לשח
-        const originalBoard = [...board];
-        board = tempBoard;
-        if (isKingInCheck('white')) {
-            score += 5;
-        }
-        board = originalBoard;
-        
-        return {
-            ...move,
-            score: score
-        };
-    });
+            const scoredMoves = allMoves.map(move => {
+                const tempBoard = JSON.parse(JSON.stringify(board));
+                
+                // Execute move on temp board
+                tempBoard[move.toRow][move.toCol] = tempBoard[move.fromRow][move.fromCol];
+                tempBoard[move.fromRow][move.fromCol] = null;
+                
+                let score = 0;
+                
+                // Capture bonus
+                if (board[move.toRow][move.toCol]) {
+                    score += PIECE_VALUES[board[move.toRow][move.toCol].type] * 2;
+                }
+                
+                // Check if move leads to check
+                const originalBoard = [...board];
+                board = tempBoard;
+                if (isKingInCheck('white')) {
+                    score += 5;
+                }
+                board = originalBoard;
+                
+                return {
+                    ...move,
+                    score: score
+                };
+            });
 
-    // בחירת המהלך הטוב ביותר
-    scoredMoves.sort((a, b) => b.score - a.score);
-    
-    // מבין המהלכים הטובים ביותר, בחר אחד באופן אקראי
-    const bestScore = scoredMoves[0].score;
-    const bestMoves = scoredMoves.filter(move => move.score === bestScore);
-    return bestMoves[Math.floor(Math.random() * bestMoves.length)];
-}
+            scoredMoves.sort((a, b) => b.score - a.score);
+            const bestScore = scoredMoves[0].score;
+            const bestMoves = scoredMoves.filter(move => move.score === bestScore);
+            return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+        }
+
         function makeHardMove() {
             const maxDepth = 3;
             let bestMove = null;
@@ -804,7 +784,9 @@ function makeMediumMove() {
                 if (depth === 0) return evaluatePosition();
 
                 const moves = getAllPossibleMoves(isMaximizing ? 'black' : 'white');
-                if (moves.length === 0) return isMaximizing ? -Infinity : Infinity;
+                if (moves.length === 0) {
+                    return isMaximizing ? -Infinity : Infinity;
+                }
 
                 if (isMaximizing) {
                     let maxScore = -Infinity;
@@ -933,9 +915,9 @@ function makeMediumMove() {
             if (isGameOver) return;
 
             const isComputerMode = document.getElementById('gameMode').value === 'computer';
-            const playerText = currentPlayer === 'white' ? 
-                'הלבן' : 
-                (isComputerMode ? 'המחשב' : 'השחור');
+            const playerText = currentPlayer === 'white' 
+                ? 'הלבן' 
+                : (isComputerMode ? 'המחשב' : 'השחור');
 
             let statusText = `תור השחקן ${playerText}`;
 
