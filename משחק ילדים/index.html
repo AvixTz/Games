@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>חשבון וקריאה · מגרש המשחקים</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Suez+One&family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../theme.css">
+<style>
+    .page { max-width: 760px; }
+
+    /* ── Level cards (start screen) ─────────────────────────── */
+    .lvl-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.7rem;
+    }
+    .lvl-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+        background: var(--cream);
+        border: var(--border-thick);
+        border-radius: 16px;
+        box-shadow: 4px 4px 0 var(--ink);
+        padding: 0.85rem 1rem;
+        font-family: 'Rubik', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--ink);
+        cursor: pointer;
+        text-align: right;
+        transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+        text-decoration: none;
+    }
+    .lvl-btn:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0 var(--ink);
+        background: var(--paper-2);
+    }
+    .lvl-btn.active {
+        background: var(--c2);
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0 var(--ink);
+    }
+    .lvl-num {
+        flex: 0 0 auto;
+        width: 44px; height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--ink);
+        color: var(--c2);
+        border-radius: 50%;
+        font-family: 'Suez One', serif;
+        font-size: 1.25rem;
+    }
+    .lvl-emoji {
+        font-size: 1.6rem;
+        line-height: 1;
+    }
+    .lvl-text { flex: 1; line-height: 1.25; }
+
+    /* ── Toggle option buttons ──────────────────────────────── */
+    .opts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 0.6rem;
+    }
+    .opt-btn {
+        background: var(--cream);
+        border: 2.5px solid var(--ink);
+        border-radius: 14px;
+        box-shadow: 3px 3px 0 var(--ink);
+        padding: 0.9rem 0.8rem;
+        font-family: 'Rubik', sans-serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--ink);
+        cursor: pointer;
+        text-align: center;
+        transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+        line-height: 1.3;
+    }
+    .opt-btn small {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 500;
+        color: var(--muted);
+        margin-top: 0.2rem;
+    }
+    .opt-btn:hover {
+        background: var(--paper-2);
+        transform: translate(-2px, -2px);
+        box-shadow: 5px 5px 0 var(--ink);
+    }
+    .opt-btn.active {
+        background: var(--c2);
+        transform: translate(-2px, -2px);
+        box-shadow: 5px 5px 0 var(--ink);
+    }
+    .opt-btn.active small { color: var(--ink); opacity: 0.85; }
+
+    /* ── Big start button ───────────────────────────────────── */
+    .start-btn {
+        display: block;
+        width: 100%;
+        padding: 1.2rem;
+        font-family: 'Suez One', serif;
+        font-size: 1.4rem;
+        color: var(--cream);
+        background: var(--c1);
+        border: var(--border-thick);
+        border-radius: 18px;
+        cursor: pointer;
+        box-shadow: 6px 6px 0 var(--ink);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        margin-top: 0.5rem;
+    }
+    .start-btn:hover {
+        transform: translate(-3px, -3px);
+        box-shadow: 9px 9px 0 var(--ink);
+    }
+    .start-btn:active {
+        transform: translate(2px, 2px);
+        box-shadow: 2px 2px 0 var(--ink);
+    }
+    .start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* ── Reading-game promo card ───────────────────────────── */
+    .reading-promo {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        background: var(--c6);
+        color: var(--cream);
+        border: var(--border-thick);
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        padding: 1.1rem 1.2rem;
+        text-decoration: none;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transform: rotate(-0.6deg);
+        margin-bottom: 1.25rem;
+    }
+    .reading-promo:hover {
+        transform: rotate(0deg) translate(-3px, -3px);
+        box-shadow: 11px 11px 0 var(--ink);
+    }
+    .reading-promo .rp-emoji {
+        font-size: 2.4rem;
+        line-height: 1;
+        filter: drop-shadow(2px 3px 0 rgba(0,0,0,0.3));
+    }
+    .reading-promo .rp-text { flex: 1; }
+    .reading-promo .rp-title {
+        font-family: 'Suez One', serif;
+        font-size: 1.35rem;
+        line-height: 1.1;
+    }
+    .reading-promo .rp-sub {
+        font-size: 0.92rem;
+        opacity: 0.92;
+        margin-top: 0.15rem;
+    }
+    .reading-promo .rp-arrow {
+        font-family: 'Suez One', serif;
+        font-size: 1.8rem;
+        line-height: 1;
+    }
+
+    /* ── Game screen ────────────────────────────────────────── */
+    .game-topbar {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 0.8rem;
+        margin-bottom: 1.1rem;
+    }
+    .home-btn {
+        background: var(--cream);
+        border: var(--border);
+        box-shadow: var(--shadow-sm);
+        border-radius: 50%;
+        width: 48px; height: 48px;
+        font-size: 1.4rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .home-btn:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0 var(--ink);
+    }
+    .progress-wrap {
+        height: 18px;
+        background: var(--cream);
+        border: 2.5px solid var(--ink);
+        border-radius: 999px;
+        overflow: hidden;
+        box-shadow: 3px 3px 0 var(--ink);
+    }
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, var(--c4) 0%, var(--c2) 50%, var(--c1) 100%);
+        width: 0%;
+        transition: width 0.35s ease;
+        border-radius: 999px;
+    }
+    .qcount {
+        background: var(--ink);
+        color: var(--c2);
+        font-family: 'Suez One', serif;
+        font-size: 1rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        min-width: 4rem;
+        text-align: center;
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* ── Question box ───────────────────────────────────────── */
+    .question-box {
+        background: var(--paper-2);
+        border: 4px solid var(--ink);
+        border-radius: 22px;
+        padding: 2rem 1.2rem;
+        text-align: center;
+        margin-bottom: 1.2rem;
+        min-height: 170px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Suez One', serif;
+        font-size: clamp(1.7rem, 5.5vw, 2.6rem);
+        color: var(--ink);
+        line-height: 1.5;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        direction: ltr;
+        box-shadow: var(--shadow);
+    }
+    .q-num, .q-op, .ans-btn { unicode-bidi: isolate; }
+    .q-num {
+        background: var(--cream);
+        padding: 0.35rem 0.95rem;
+        border-radius: 12px;
+        border: 3px solid var(--ink);
+        display: inline-block;
+        min-width: 3.2rem;
+        box-shadow: 3px 3px 0 var(--ink);
+    }
+    .q-num.q-target {
+        background: var(--c1);
+        color: var(--cream);
+    }
+    .q-op {
+        color: var(--c5-d);
+        font-size: 1.15em;
+        padding: 0 0.2rem;
+    }
+
+    /* ── Answer buttons ─────────────────────────────────────── */
+    .answers {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.8rem;
+    }
+    .ans-btn {
+        padding: 1.2rem 0.8rem;
+        font-family: 'Suez One', serif;
+        font-size: 1.5rem;
+        color: var(--ink);
+        background: var(--cream);
+        border: var(--border-thick);
+        border-radius: 18px;
+        cursor: pointer;
+        transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+        min-height: 78px;
+        word-break: keep-all;
+        box-shadow: 5px 5px 0 var(--ink);
+        line-height: 1.1;
+    }
+    .ans-btn:hover {
+        background: var(--paper-2);
+        transform: translate(-2px, -2px);
+        box-shadow: 7px 7px 0 var(--ink);
+    }
+    .ans-btn.correct {
+        background: var(--c4);
+        color: var(--ink);
+        animation: pop-ans 0.45s cubic-bezier(.34,1.56,.64,1);
+    }
+    .ans-btn.wrong {
+        background: var(--c5);
+        color: var(--cream);
+        animation: shake 0.4s ease;
+    }
+    @keyframes pop-ans {
+        0%   { transform: scale(1); }
+        50%  { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+    @keyframes shake {
+        0%,100% { transform: translateX(0); }
+        25%     { transform: translateX(-8px); }
+        75%     { transform: translateX(8px); }
+    }
+
+    .free-input-wrap {
+        display: flex;
+        gap: 0.7rem;
+        flex-direction: column;
+    }
+    .free-input {
+        width: 100%;
+        padding: 1rem;
+        font-family: 'Suez One', serif;
+        font-size: 1.6rem;
+        text-align: center;
+        border: var(--border-thick);
+        border-radius: 16px;
+        outline: none;
+        direction: rtl;
+        background: var(--cream);
+        box-shadow: 4px 4px 0 var(--ink);
+    }
+    .free-input:focus {
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0 var(--c3);
+    }
+    .submit-btn {
+        padding: 1rem;
+        font-family: 'Suez One', serif;
+        font-size: 1.15rem;
+        color: var(--cream);
+        background: var(--c3);
+        border: var(--border-thick);
+        border-radius: 16px;
+        cursor: pointer;
+        box-shadow: 4px 4px 0 var(--ink);
+        transition: transform 0.12s ease, box-shadow 0.12s ease;
+    }
+    .submit-btn:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 6px 6px 0 var(--ink);
+    }
+    .submit-btn:active {
+        transform: translate(2px, 2px);
+        box-shadow: 1px 1px 0 var(--ink);
+    }
+    .hint-msg {
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.95rem;
+        margin-top: 0.6rem;
+        font-weight: 600;
+    }
+
+    /* ── End screen ─────────────────────────────────────────── */
+    .end-box {
+        text-align: center;
+        padding: 1rem 0.5rem;
+    }
+    .end-emoji {
+        font-size: 5.5rem;
+        margin-bottom: 0.4rem;
+        display: inline-block;
+        animation: bounce 1.1s ease infinite;
+    }
+    @keyframes bounce {
+        0%,100% { transform: translateY(0); }
+        50%     { transform: translateY(-14px); }
+    }
+    .score-label {
+        color: var(--muted);
+        font-size: 1.05rem;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+    }
+    .score-num {
+        font-family: 'Suez One', serif;
+        font-size: 4.5rem;
+        color: var(--c1);
+        line-height: 1;
+        text-shadow: 4px 4px 0 var(--c2), 8px 8px 0 var(--ink);
+    }
+    .stars {
+        font-size: 2.4rem;
+        margin: 0.8rem 0;
+        letter-spacing: 6px;
+    }
+    .end-msg {
+        color: var(--ink);
+        font-family: 'Suez One', serif;
+        font-size: 1.2rem;
+        margin-top: 0.4rem;
+    }
+    .end-actions {
+        display: flex;
+        gap: 0.7rem;
+        margin-top: 1.3rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    /* ── High scores ───────────────────────────────────────── */
+    .scores-list { list-style: none; }
+    .scores-list li {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0.2rem;
+        border-bottom: 2px dashed rgba(17,16,20,0.18);
+        font-size: 0.95rem;
+        font-weight: 700;
+    }
+    .scores-list li:last-child { border-bottom: none; }
+    .scores-list .sc-score {
+        color: var(--c1);
+        font-family: 'Suez One', serif;
+        font-size: 1.05rem;
+    }
+    .scores-list .sc-level {
+        color: var(--c3-d);
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    .scores-list .sc-date {
+        color: var(--muted);
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    .no-scores {
+        text-align: center;
+        color: var(--muted);
+        padding: 0.8rem;
+        font-weight: 600;
+    }
+
+    .hidden { display: none !important; }
+
+    .floaty {
+        position: fixed;
+        font-size: 2.5rem;
+        pointer-events: none;
+        animation: floatUp 1.2s ease-out forwards;
+        z-index: 1000;
+        filter: drop-shadow(2px 3px 0 rgba(0,0,0,0.25));
+    }
+    @keyframes floatUp {
+        0%   { transform: translateY(0) scale(0.6); opacity: 1; }
+        100% { transform: translateY(-180px) scale(1.8); opacity: 0; }
+    }
+
+    @media (max-width: 540px) {
+        .answers { grid-template-columns: 1fr; }
+        .lvl-btn { padding: 0.7rem 0.8rem; font-size: 0.98rem; }
+        .reading-promo { padding: 0.85rem 1rem; }
+    }
+</style>
+</head>
+<body>
+<div class="page" id="app">
+
+    <!-- ========== START SCREEN ========== -->
+    <section id="screen-start">
+        <div class="topbar">
+            <a class="back-btn" href="../index.html">→ חזרה למגרש</a>
+            <h1 class="page-title">🎈 חשבון וקריאה</h1>
+        </div>
+
+        <p class="text-muted text-center mt-md" style="margin-bottom:1.2rem; font-weight:600">
+            משחק חשבון עם מילים — מותאם לכיתה א׳
+        </p>
+
+        <a class="reading-promo" href="reading.html">
+            <span class="rp-emoji">📖</span>
+            <div class="rp-text">
+                <div class="rp-title">מסע הסיפורים</div>
+                <div class="rp-sub">משחק הבנת הנקרא — סיפורים, שאלות וכוכבים</div>
+            </div>
+            <span class="rp-arrow">←</span>
+        </a>
+
+        <div class="card">
+            <h2 style="font-family:'Suez One',serif;font-size:1.25rem;margin-bottom:0.8rem">בחרו רמה</h2>
+            <div class="lvl-grid" id="lvl-grid"></div>
+        </div>
+
+        <div class="card">
+            <h2 style="font-family:'Suez One',serif;font-size:1.25rem;margin-bottom:0.8rem">תצוגת המספרים</h2>
+            <div class="opts" id="format-opts">
+                <button class="opt-btn" data-val="digits">ספרות בלבד<small>1 · 2 · 3</small></button>
+                <button class="opt-btn" data-val="words">מילים בלבד<small>אחת · שתיים</small></button>
+                <button class="opt-btn active" data-val="mixed">מעורב 🎲<small>ספרות + מילים</small></button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="font-family:'Suez One',serif;font-size:1.25rem;margin-bottom:0.8rem">איך עונים?</h2>
+            <div class="opts" id="bank-opts">
+                <button class="opt-btn active" data-val="bank">מחסן תשובות<small>4 אפשרויות</small></button>
+                <button class="opt-btn" data-val="free">כתיבה חופשית<small>רושמים לבד</small></button>
+            </div>
+        </div>
+
+        <button class="start-btn" id="start-btn">יאללה, מתחילים! 🚀</button>
+
+        <div class="card" style="margin-top:1.25rem">
+            <h2 style="font-family:'Suez One',serif;font-size:1.25rem;margin-bottom:0.6rem">🏆 השיאים שלי</h2>
+            <ul class="scores-list" id="scores-list"></ul>
+        </div>
+
+        <footer class="footer">
+            <p>נבנה <span class="heart">♥</span> לסקרנים הקטנים</p>
+        </footer>
+    </section>
+
+    <!-- ========== GAME SCREEN ========== -->
+    <section id="screen-game" class="hidden">
+        <div class="game-topbar">
+            <button class="home-btn" id="home-btn" title="חזרה לתפריט">🏠</button>
+            <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+            <div class="qcount" id="qcount">1/10</div>
+        </div>
+
+        <div class="question-box" id="question-box"></div>
+
+        <div id="answer-area"></div>
+        <p class="hint-msg" id="hint"></p>
+    </section>
+
+    <!-- ========== END SCREEN ========== -->
+    <section id="screen-end" class="hidden">
+        <div class="card">
+            <div class="end-box">
+                <div class="end-emoji" id="end-emoji">🎉</div>
+                <div class="score-label">הציון שלך</div>
+                <div class="score-num" id="final-score">100</div>
+                <div class="stars" id="stars"></div>
+                <div class="end-msg" id="end-msg"></div>
+
+                <div class="end-actions">
+                    <button class="btn btn--pink" id="play-again-btn">עוד פעם ↻</button>
+                    <button class="btn btn--ghost" id="back-menu-btn">תפריט ראשי 🏠</button>
+                    <a class="btn btn--mint" href="../index.html">למגרש המשחקים</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script>
+/* =====================================================================
+   Hebrew number → words (feminine counting form, 0‑1000)
+   ===================================================================== */
+const ONES     = ['','אחת','שתיים','שלוש','ארבע','חמש','שש','שבע','שמונה','תשע'];
+const TEENS    = ['עשר','אחת עשרה','שתים עשרה','שלוש עשרה','ארבע עשרה','חמש עשרה','שש עשרה','שבע עשרה','שמונה עשרה','תשע עשרה'];
+const TENS     = ['','','עשרים','שלושים','ארבעים','חמישים','שישים','שבעים','שמונים','תשעים'];
+const HUNDREDS = ['','מאה','מאתיים','שלוש מאות','ארבע מאות','חמש מאות','שש מאות','שבע מאות','שמונה מאות','תשע מאות'];
+
+function numToHebrew(n) {
+  if (n === 0) return 'אפס';
+  if (n === 1000) return 'אלף';
+  const parts = [];
+  const h = Math.floor(n / 100);
+  const rem = n % 100;
+  if (h > 0) parts.push(HUNDREDS[h]);
+  if (rem >= 10 && rem < 20) {
+    parts.push(TEENS[rem - 10]);
+  } else if (rem >= 20) {
+    const t = Math.floor(rem / 10), o = rem % 10;
+    parts.push(TENS[t]);
+    if (o > 0) parts.push(ONES[o]);
+  } else if (rem > 0) {
+    parts.push(ONES[rem]);
+  }
+  if (parts.length === 1) return parts[0];
+  const last = parts.pop();
+  return parts.join(' ') + ' ו' + last;
+}
+
+function normalizeHe(s) {
+  return (s || '')
+    .replace(/[\s־"'״׳\-]/g, '')
+    .replace(/שתים/g, 'שתיים')
+    .trim();
+}
+
+function checkAnswer(userInput, expected) {
+  const cleaned = (userInput || '').trim();
+  if (!cleaned) return false;
+  if (/^\d+$/.test(cleaned)) return parseInt(cleaned, 10) === expected;
+  return normalizeHe(cleaned) === normalizeHe(numToHebrew(expected));
+}
+
+/* =====================================================================
+   Game configuration
+   ===================================================================== */
+const LEVELS = [
+  { name: 'חיבור וחיסור עד 10',          ops: ['+','-'],       max: 10,   icon: '🐥' },
+  { name: 'חיבור וחיסור עד 20',          ops: ['+','-'],       max: 20,   icon: '🐣' },
+  { name: 'חיבור וחיסור עד 100',         ops: ['+','-'],       max: 100,  icon: '🐰' },
+  { name: 'חיבור, חיסור וכפל עד 100',    ops: ['+','-','×'],   max: 100,  icon: '🦊' },
+  { name: 'חיבור, חיסור וכפל עד 1000',   ops: ['+','-','×'],   max: 1000, icon: '🦁' },
+  { name: 'חיבור, חיסור וחילוק עד 100',  ops: ['+','-','÷'],   max: 100,  icon: '🐉' },
+];
+
+const state = {
+  level: 0,
+  format: 'mixed',
+  mode: 'bank',
+  current: 0,
+  score: 0,
+  questions: [],
+  locked: false,
+};
+
+const rand  = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const pick  = arr => arr[Math.floor(Math.random() * arr.length)];
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function pickFormat(mode) {
+  if (mode === 'mixed') return Math.random() < 0.5 ? 'digits' : 'words';
+  return mode;
+}
+const displayNum = (n, fmt) => fmt === 'words' ? numToHebrew(n) : n.toString();
+
+function genProblem(levelIdx) {
+  const L = LEVELS[levelIdx];
+  const op = pick(L.ops);
+  let a, b, answer;
+  if (op === '+') {
+    const max = L.max;
+    a = rand(1, max - 1);
+    b = rand(1, max - a);
+    answer = a + b;
+  } else if (op === '-') {
+    a = rand(2, L.max);
+    b = rand(1, a);
+    answer = a - b;
+  } else if (op === '×') {
+    const maxFactor = L.max === 100 ? 10 : 30;
+    a = rand(2, maxFactor);
+    const bMax = Math.min(maxFactor, Math.floor(L.max / a));
+    b = rand(2, Math.max(2, bMax));
+    answer = a * b;
+  } else if (op === '÷') {
+    b = rand(2, 10);
+    answer = rand(2, Math.floor(L.max / b));
+    a = b * answer;
+  }
+  return { a, b, op, answer };
+}
+
+function buildQuestions(levelIdx, count = 10) {
+  const seen = new Set();
+  const out = [];
+  let guard = 0;
+  while (out.length < count && guard++ < 400) {
+    const p = genProblem(levelIdx);
+    const key = `${p.a}${p.op}${p.b}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(p);
+  }
+  return out;
+}
+
+function genChoices(correct, levelIdx) {
+  const L = LEVELS[levelIdx];
+  const set = new Set([correct]);
+  const spread = Math.max(3, Math.floor(L.max / 6));
+  let guard = 0;
+  while (set.size < 4 && guard++ < 80) {
+    const off = rand(1, spread);
+    const sign = Math.random() < 0.5 ? 1 : -1;
+    const c = correct + sign * off;
+    if (c >= 0 && c !== correct) set.add(c);
+  }
+  let n = 0;
+  while (set.size < 4) { if (!set.has(n)) set.add(n); n++; if (n > 10000) break; }
+  return shuffle([...set]);
+}
+
+/* =====================================================================
+   Audio feedback
+   ===================================================================== */
+let audioCtx = null;
+function beep(freq, duration = 0.15, type = 'sine') {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(0.001, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.2, audioCtx.currentTime + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  } catch(e) {}
+}
+function soundCorrect() { beep(660, 0.12); setTimeout(() => beep(880, 0.16), 120); }
+function soundWrong()   { beep(200, 0.25, 'square'); }
+function soundWin()     { [523, 659, 784, 1046].forEach((f, i) => setTimeout(() => beep(f, 0.18), i * 130)); }
+
+function spawnFloaty(txt, x, y) {
+  const el = document.createElement('div');
+  el.className = 'floaty';
+  el.textContent = txt;
+  el.style.left = (x - 20) + 'px';
+  el.style.top  = (y - 20) + 'px';
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1200);
+}
+
+/* =====================================================================
+   High scores
+   ===================================================================== */
+const SCORES_KEY = 'mathread_highscores_v1';
+
+function loadScores() {
+  try { return JSON.parse(localStorage.getItem(SCORES_KEY) || '[]'); }
+  catch(e) { return []; }
+}
+function saveScore(entry) {
+  const list = loadScores();
+  list.push(entry);
+  list.sort((a, b) => b.score - a.score || b.when - a.when);
+  localStorage.setItem(SCORES_KEY, JSON.stringify(list.slice(0, 30)));
+}
+function renderScores() {
+  const ul = document.getElementById('scores-list');
+  const list = loadScores();
+  if (!list.length) {
+    ul.innerHTML = '<li class="no-scores">עדיין אין שיאים — בואו נתחיל! 💪</li>';
+    return;
+  }
+  ul.innerHTML = list.slice(0, 8).map((s, i) => {
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '·';
+    const date = new Date(s.when).toLocaleDateString('he-IL');
+    return `<li>
+      <span class="sc-score">${medal} ${s.score} נק׳</span>
+      <span class="sc-level">${LEVELS[s.level].icon} רמה ${s.level + 1}</span>
+      <span class="sc-date">${date}</span>
+    </li>`;
+  }).join('');
+}
+
+/* =====================================================================
+   Start screen
+   ===================================================================== */
+function buildLevelButtons() {
+  const grid = document.getElementById('lvl-grid');
+  grid.innerHTML = LEVELS.map((L, i) => `
+    <button class="lvl-btn ${i === state.level ? 'active' : ''}" data-lvl="${i}">
+      <span class="lvl-num">${i + 1}</span>
+      <span class="lvl-emoji">${L.icon}</span>
+      <span class="lvl-text">${L.name}</span>
+    </button>
+  `).join('');
+  grid.querySelectorAll('.lvl-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.level = parseInt(btn.dataset.lvl, 10);
+      grid.querySelectorAll('.lvl-btn').forEach(b => b.classList.toggle('active', b === btn));
+    });
+  });
+}
+
+function wireOptGroup(containerId, key) {
+  const el = document.getElementById(containerId);
+  el.querySelectorAll('.opt-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      el.querySelectorAll('.opt-btn').forEach(x => x.classList.toggle('active', x === b));
+      state[key] = b.dataset.val;
+    });
+  });
+}
+
+/* =====================================================================
+   Game flow
+   ===================================================================== */
+function show(id) {
+  ['screen-start','screen-game','screen-end'].forEach(s => {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function startGame() {
+  state.current = 0;
+  state.score = 0;
+  state.locked = false;
+  state.questions = buildQuestions(state.level, 10);
+  show('screen-game');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  state.locked = false;
+  const q = state.questions[state.current];
+  document.getElementById('qcount').textContent = `${state.current + 1}/10`;
+  document.getElementById('progress-bar').style.width = (state.current * 10) + '%';
+  document.getElementById('hint').textContent = '';
+
+  const fmtA = pickFormat(state.format);
+  const fmtB = pickFormat(state.format);
+  const opSymbol = { '+': '+', '-': '−', '×': '×', '÷': '÷' }[q.op];
+  document.getElementById('question-box').innerHTML = `
+    <span class="q-num">${displayNum(q.a, fmtA)}</span>
+    <span class="q-op">${opSymbol}</span>
+    <span class="q-num">${displayNum(q.b, fmtB)}</span>
+    <span class="q-op">=</span>
+    <span class="q-num q-target">?</span>
+  `;
+
+  const area = document.getElementById('answer-area');
+  if (state.mode === 'bank') {
+    const choices = genChoices(q.answer, state.level);
+    area.innerHTML = '<div class="answers">' + choices.map(c => {
+      const f = pickFormat(state.format);
+      return `<button class="ans-btn" data-val="${c}">${displayNum(c, f)}</button>`;
+    }).join('') + '</div>';
+    area.querySelectorAll('.ans-btn').forEach(btn => {
+      btn.addEventListener('click', e => handleAnswer(parseInt(btn.dataset.val, 10), btn, e));
+    });
+  } else {
+    area.innerHTML = `
+      <div class="free-input-wrap">
+        <input type="text" class="free-input" id="free-input" inputmode="text" autocomplete="off" placeholder="התשובה שלי..." />
+        <button class="submit-btn" id="submit-free">בדיקה ✓</button>
+      </div>
+    `;
+    const input = document.getElementById('free-input');
+    input.focus();
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('submit-free').click();
+    });
+    document.getElementById('submit-free').addEventListener('click', () => {
+      if (state.locked) return;
+      const val = input.value;
+      handleFreeAnswer(val, input);
+    });
+    document.getElementById('hint').textContent = 'אפשר לרשום במספרים (למשל 12) או במילים (שתים עשרה)';
+  }
+}
+
+function handleAnswer(val, btn, event) {
+  if (state.locked) return;
+  state.locked = true;
+  const q = state.questions[state.current];
+  const correct = val === q.answer;
+  if (correct) {
+    btn.classList.add('correct');
+    state.score += 10;
+    soundCorrect();
+    if (event) spawnFloaty(pick(['⭐','🎉','👍','💖','🌟']), event.clientX, event.clientY);
+  } else {
+    btn.classList.add('wrong');
+    soundWrong();
+    document.querySelectorAll('.ans-btn').forEach(b => {
+      if (parseInt(b.dataset.val, 10) === q.answer) b.classList.add('correct');
+    });
+  }
+  setTimeout(nextQuestion, correct ? 700 : 1400);
+}
+
+function handleFreeAnswer(val, input) {
+  state.locked = true;
+  const q = state.questions[state.current];
+  const correct = checkAnswer(val, q.answer);
+  if (correct) {
+    state.score += 10;
+    input.style.borderColor = 'var(--c4-d)';
+    input.style.background = '#C6F5E3';
+    soundCorrect();
+    const r = input.getBoundingClientRect();
+    spawnFloaty(pick(['⭐','🎉','👍','💖']), r.left + r.width/2, r.top + r.height/2);
+    document.getElementById('hint').innerHTML = '🎉 יפה מאוד!';
+  } else {
+    input.style.borderColor = 'var(--c5-d)';
+    input.style.background = '#FFD2C2';
+    soundWrong();
+    document.getElementById('hint').innerHTML =
+      `התשובה הנכונה: <b>${q.answer}</b> (${numToHebrew(q.answer)})`;
+  }
+  setTimeout(nextQuestion, correct ? 900 : 1800);
+}
+
+function nextQuestion() {
+  state.current++;
+  if (state.current >= state.questions.length) {
+    finishGame();
+  } else {
+    renderQuestion();
+  }
+}
+
+function finishGame() {
+  document.getElementById('progress-bar').style.width = '100%';
+  const score = state.score;
+  document.getElementById('final-score').textContent = score;
+
+  let emoji, msg, starsCount;
+  if (score === 100)      { emoji = '🏆'; msg = 'וואו! ציון מושלם! אתם אלופים!'; starsCount = 5; }
+  else if (score >= 80)   { emoji = '🌟'; msg = 'מעולה! המשיכו ככה!';            starsCount = 4; }
+  else if (score >= 60)   { emoji = '😊'; msg = 'כל הכבוד! עוד קצת ונצליח יותר!'; starsCount = 3; }
+  else if (score >= 40)   { emoji = '💪'; msg = 'ניסיון טוב! בואו ננסה עוד פעם!'; starsCount = 2; }
+  else                    { emoji = '🌱'; msg = 'כל התחלה קשה. אמא/אבא יכולים לעזור!'; starsCount = 1; }
+
+  document.getElementById('end-emoji').textContent = emoji;
+  document.getElementById('end-msg').textContent = msg;
+  document.getElementById('stars').textContent =
+    '⭐'.repeat(starsCount) + '☆'.repeat(5 - starsCount);
+
+  saveScore({
+    score, level: state.level, format: state.format, mode: state.mode, when: Date.now(),
+  });
+
+  show('screen-end');
+  soundWin();
+  renderScores();
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  buildLevelButtons();
+  wireOptGroup('format-opts', 'format');
+  wireOptGroup('bank-opts', 'mode');
+  renderScores();
+
+  document.getElementById('start-btn').addEventListener('click', () => {
+    try { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e) {}
+    startGame();
+  });
+  document.getElementById('home-btn').addEventListener('click', () => {
+    if (confirm('לחזור לתפריט הראשי? הניקוד לא יישמר.')) show('screen-start');
+  });
+  document.getElementById('play-again-btn').addEventListener('click', startGame);
+  document.getElementById('back-menu-btn').addEventListener('click', () => show('screen-start'));
+});
+</script>
+</body>
+</html>

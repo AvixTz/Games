@@ -3,823 +3,449 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4 בשורה</title>
+    <title>4 בשורה · מגרש המשחקים</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Suez+One&family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Varela+Round&display=swap');
-
-        :root {
-            --primary: #4A90E2;
-            --background: #f0f2f5;
-            --text: #2C3E50;
-            --player1: #dc3545;
-            --player2: #ffc107;
-            --board: #4A90E2;
+        .c4-wrap {
+            max-width: 560px;
+            margin: 0 auto;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Varela Round', sans-serif;
-        }
-
-        body {
-            background-color: var(--background);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2rem;
-        }
-
-        .back-button {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            padding: 0.5rem 1rem;
-            background: white;
-            border: 2px solid var(--primary);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .back-button:hover {
-            background: var(--primary);
-            color: white;
-        }
-
-        .game-container {
-            background: white;
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            max-width: 800px;
-            width: 100%;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .game-board {
-            background: var(--board);
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
-            padding: 10px;
-            border-radius: 15px;
-            margin: 2rem auto;
-            max-width: 700px;
-        }
-
-        .cell {
-            aspect-ratio: 1;
-            background: white;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .cell:hover {
-            background: #e9ecef;
-        }
-
-        .cell.player1 {
-            background: var(--player1);
-            animation: dropPiece 0.5s ease-in;
-        }
-
-        .cell.player2 {
-            background: var(--player2);
-            animation: dropPiece 0.5s ease-in;
-        }
-
-        @keyframes dropPiece {
-            0% {
-                transform: translateY(-300%);
-            }
-            100% {
-                transform: translateY(0);
-            }
-        }
-
-        .controls {
-            display: grid;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        select, button {
-            padding: 0.8rem 1.5rem;
-            border-radius: 10px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-
-        select {
-            border: 2px solid var(--primary);
-            background: white;
-        }
-
-        button {
-            background: var(--primary);
-            color: white;
-            border: none;
-        }
-
-        button:hover {
-            background: #357ABD;
-        }
-
-        .status {
-            text-align: center;
-            margin: 1rem 0;
-            font-size: 1.2rem;
-            color: var(--text);
-            min-height: 2rem;
-        }
-
-        .score {
-            display: flex;
-            justify-content: space-around;
-            margin: 1rem 0;
-        }
-
-        .score-item {
-            text-align: center;
-            padding: 1rem;
-            border-radius: 10px;
-            background: #f8f9fa;
-            min-width: 120px;
-        }
-
-        .score-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary);
-            margin-top: 0.5rem;
-        }
-
         .preview-row {
             display: grid;
             grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
-            padding: 10px;
-            margin-bottom: -1rem;
+            gap: 8px;
+            padding: 8px 12px 0;
+            margin-bottom: 0.4rem;
         }
-
         .preview-cell {
             aspect-ratio: 1;
             border-radius: 50%;
-            border: 2px dashed #ccc;
             opacity: 0;
-            transition: all 0.3s ease;
+            transition: opacity 0.18s ease;
+            background: var(--c1);
+            border: 2.5px dashed var(--ink);
+        }
+        .preview-cell.active { opacity: 0.6; }
+
+        .c4-board {
+            background: var(--c3);
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            padding: 12px;
+            border: var(--border-thick);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+        }
+        .c4-cell {
+            aspect-ratio: 1;
+            background: var(--cream);
+            border: 2.5px solid var(--ink);
+            border-radius: 50%;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: background 0.18s ease;
+        }
+        .c4-cell:not(.player1):not(.player2):hover {
+            background: var(--paper-2);
+        }
+        .c4-cell.player1, .c4-cell.player2 {
+            cursor: default;
+        }
+        .c4-cell.player1::after,
+        .c4-cell.player2::after {
+            content: "";
+            position: absolute;
+            inset: 4%;
+            border-radius: 50%;
+            border: 2.5px solid var(--ink);
+            box-shadow: inset 0 4px 0 rgba(255,255,255,0.35),
+                        inset 0 -5px 0 rgba(0,0,0,0.2);
+            animation: dropPiece 0.55s cubic-bezier(.34,1.56,.64,1);
+        }
+        .c4-cell.player1::after { background: var(--c1); }
+        .c4-cell.player2::after { background: var(--c2); }
+        .c4-cell.win::after {
+            animation: dropPiece 0.55s cubic-bezier(.34,1.56,.64,1),
+                       winPulse 0.7s ease-in-out 0.55s infinite alternate;
+        }
+        @keyframes dropPiece {
+            0%   { transform: translateY(-500%); }
+            70%  { transform: translateY(8%); }
+            100% { transform: translateY(0); }
+        }
+        @keyframes winPulse {
+            from { transform: scale(1); filter: brightness(1); }
+            to   { transform: scale(1.08); filter: brightness(1.15); }
         }
 
-        .preview-cell.active {
-            opacity: 0.5;
-            background: var(--player1);
+        @media (max-width: 600px) {
+            .c4-wrap { max-width: 100%; }
+            .c4-board, .preview-row { gap: 5px; padding: 8px; }
         }
     </style>
 </head>
 <body>
-    <button class="back-button" onclick="window.location.href='index.html'">חזרה לתפריט</button>
-    
-    <div class="game-container">
-        <div class="header">
-            <h1>4 בשורה</h1>
-        </div>
+<div class="page">
 
-        <div class="score">
-            <div class="score-item">
-                <div>שחקן 1</div>
-                <div class="score-value" id="player1-score">0</div>
-            </div>
-            <div class="score-item">
-                <div id="player2-label">שחקן 2</div>
-                <div class="score-value" id="player2-score">0</div>
-            </div>
-        </div>
+    <div class="topbar">
+        <a class="back-btn" href="index.html">→ חזרה למגרש</a>
+        <h1 class="page-title">🔵 4 בשורה</h1>
+    </div>
 
-        <div class="status" id="status">תור שחקן 1</div>
-        
-        <div class="preview-row" id="preview-row"></div>
-        <div class="game-board" id="board"></div>
+    <details class="rules">
+        <summary>איך משחקים?</summary>
+        <ul>
+            <li>לחצו על עמודה כדי להפיל לתוכה דיסקית — היא נופלת לתחתית.</li>
+            <li>המנצח: הראשון שמסדר <strong>ארבע דיסקיות ברצף</strong> — אופקי, אנכי או אלכסוני.</li>
+            <li>שחקן 1 משחק ב־<strong style="color:var(--c1)">ורוד</strong>, שחקן 2 ב־<strong style="color:var(--c2-d)">צהוב</strong>.</li>
+            <li>במצב מול המחשב — אתם משחקים ראשונים בורוד.</li>
+        </ul>
+    </details>
 
-        <div class="controls">
-            <select id="gameMode" onchange="changeGameMode()">
-                <option value="2players">שחקן מול שחקן</option>
-                <option value="computer">שחקן מול מחשב</option>
-            </select>
-            <button onclick="resetGame()">משחק חדש</button>
+    <div class="status" id="status">
+        <span class="status__msg">תור: <strong id="turn-label" style="color:var(--c1)">שחקן 1</strong></span>
+        <div class="chip-row" style="margin:0">
+            <span class="chip chip--pink"><span class="chip-label">P1</span> <span class="chip-value" id="player1-score">0</span></span>
+            <span class="chip chip--yellow"><span class="chip-label" id="player2-label">P2</span> <span class="chip-value" id="player2-score">0</span></span>
         </div>
     </div>
 
-    <script>
-        const ROWS = 6;
-        const COLS = 7;
-        let board = Array(ROWS).fill().map(() => Array(COLS).fill(''));
-        let currentPlayer = 1;
-        let isGameActive = true;
-        let isComputerGame = false;
-        let scores = { 1: 0, 2: 0 };
+    <div class="card">
+        <div class="c4-wrap">
+            <div class="preview-row" id="preview-row"></div>
+            <div class="c4-board" id="board" role="grid" aria-label="לוח 4 בשורה"></div>
+        </div>
 
-        // יצירת לוח המשחק
-        function createBoard() {
-            const boardElement = document.getElementById('board');
-            const previewRow = document.getElementById('preview-row');
-            boardElement.innerHTML = '';
-            previewRow.innerHTML = '';
-            
-            // יצירת שורת תצוגה מקדימה
-            for (let col = 0; col < COLS; col++) {
-                const previewCell = document.createElement('div');
-                previewCell.classList.add('preview-cell');
-                previewCell.setAttribute('data-col', col);
-                previewRow.appendChild(previewCell);
-            }
-            
-            // יצירת לוח המשחק
-            for (let row = 0; row < ROWS; row++) {
-                for (let col = 0; col < COLS; col++) {
-                    const cell = document.createElement('div');
-                    cell.classList.add('cell');
-                    cell.setAttribute('data-row', row);
-                    cell.setAttribute('data-col', col);
-                    cell.addEventListener('click', () => handleColumnClick(col));
-                    cell.addEventListener('mouseover', () => showPreview(col));
-                    cell.addEventListener('mouseout', hidePreview);
-                    boardElement.appendChild(cell);
-                }
-            }
+        <div class="form-row" style="margin-top:1.2rem">
+            <div class="form-field">
+                <label class="form-label" for="gameMode">מצב משחק</label>
+                <select class="select" id="gameMode" onchange="changeGameMode()">
+                    <option value="2players">שחקן מול שחקן</option>
+                    <option value="computer">שחקן מול מחשב</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn--pink" onclick="resetGame()">משחק חדש ↻</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>נבנה <span class="heart">♥</span> במיוחד לסקרנים הקטנים</p>
+    </footer>
+</div>
+
+<div class="modal-backdrop" id="modal">
+    <div class="modal">
+        <h2 id="modal-title">🎉 ניצחון!</h2>
+        <p id="modal-text"></p>
+        <div class="modal-actions">
+            <button class="btn btn--pink" onclick="closeModal(); resetGame();">סיבוב נוסף ↻</button>
+            <a class="btn btn--ghost" href="index.html">למגרש</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    const ROWS = 6;
+    const COLS = 7;
+    let board = Array(ROWS).fill().map(() => Array(COLS).fill(''));
+    let currentPlayer = 1;
+    let isGameActive = true;
+    let isComputerGame = false;
+    let scores = { 1: 0, 2: 0 };
+
+    function createBoard() {
+        const boardEl = document.getElementById('board');
+        const previewRow = document.getElementById('preview-row');
+        boardEl.innerHTML = '';
+        previewRow.innerHTML = '';
+
+        for (let col = 0; col < COLS; col++) {
+            const p = document.createElement('div');
+            p.classList.add('preview-cell');
+            p.setAttribute('data-col', col);
+            previewRow.appendChild(p);
         }
 
-        // טיפול בלחיצה על עמודה
-        function handleColumnClick(col) {
-            if (!isGameActive || (isComputerGame && currentPlayer === 2)) return;
-            
+        for (let row = 0; row < ROWS; row++) {
+            for (let col = 0; col < COLS; col++) {
+                const cell = document.createElement('div');
+                cell.classList.add('c4-cell');
+                cell.setAttribute('role', 'gridcell');
+                cell.setAttribute('data-row', row);
+                cell.setAttribute('data-col', col);
+                cell.addEventListener('click', () => handleColumnClick(col));
+                cell.addEventListener('mouseover', () => showPreview(col));
+                cell.addEventListener('mouseout', hidePreview);
+                boardEl.appendChild(cell);
+            }
+        }
+    }
+
+    function handleColumnClick(col) {
+        if (!isGameActive || (isComputerGame && currentPlayer === 2)) return;
+        const row = getLowestEmptyRow(col);
+        if (row !== -1) makeMove(row, col);
+    }
+
+    function getLowestEmptyRow(col) {
+        for (let row = ROWS - 1; row >= 0; row--) {
+            if (board[row][col] === '') return row;
+        }
+        return -1;
+    }
+
+    function makeMove(row, col) {
+        board[row][col] = currentPlayer;
+        updateCell(row, col);
+
+        const winLine = getWinLine(row, col);
+        if (winLine) { endGame(false, winLine); return; }
+        if (checkDraw()) { endGame(true); return; }
+
+        currentPlayer = currentPlayer === 1 ? 2 : 1;
+        updateStatus();
+        hidePreview();
+
+        if (isComputerGame && currentPlayer === 2 && isGameActive) {
+            setTimeout(computerMove, 450);
+        }
+    }
+
+    function computerMove() {
+        const col = findBestMove();
+        const row = getLowestEmptyRow(col);
+        if (row !== -1) makeMove(row, col);
+    }
+
+    function updateCell(row, col) {
+        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        cell.classList.add(`player${currentPlayer}`);
+    }
+
+    function getWinLine(row, col) {
+        const directions = [
+            [[0, 1], [0, -1]],
+            [[1, 0], [-1, 0]],
+            [[1, 1], [-1, -1]],
+            [[1, -1], [-1, 1]]
+        ];
+        for (const dir of directions) {
+            const cells = [[row, col]];
+            for (const [dx, dy] of dir) {
+                let r = row + dx, c = col + dy;
+                while (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c] === currentPlayer) {
+                    cells.push([r, c]);
+                    r += dx; c += dy;
+                }
+            }
+            if (cells.length >= 4) return cells;
+        }
+        return null;
+    }
+
+    function checkWin(row, col) {
+        return getWinLine(row, col) !== null;
+    }
+
+    function checkDraw() {
+        return board[0].every(cell => cell !== '');
+    }
+
+    function endGame(isDraw, winLine) {
+        isGameActive = false;
+        const statusEl   = document.getElementById('status');
+        const turnLabel  = document.getElementById('turn-label');
+        const modalTitle = document.getElementById('modal-title');
+        const modalText  = document.getElementById('modal-text');
+        statusEl.classList.remove('status--turn');
+
+        if (isDraw) {
+            statusEl.classList.add('status--draw');
+            turnLabel.textContent = 'תיקו';
+            turnLabel.style.color = 'var(--ink)';
+            modalTitle.textContent = '🤝 תיקו!';
+            modalText.textContent  = 'הלוח מלא ואין מנצח. סיבוב נוסף?';
+        } else {
+            if (winLine) winLine.forEach(([r, c]) =>
+                document.querySelector(`[data-row="${r}"][data-col="${c}"]`).classList.add('win'));
+            const isHuman = !isComputerGame || currentPlayer === 1;
+            const name = currentPlayer === 1 ? 'שחקן 1' :
+                         (isComputerGame ? 'המחשב' : 'שחקן 2');
+            statusEl.classList.add(isHuman ? 'status--win' : 'status--lose');
+            turnLabel.textContent = `${name} ניצח!`;
+            turnLabel.style.color = currentPlayer === 1 ? 'var(--c1)' : 'var(--c2-d)';
+            modalTitle.textContent = isHuman ? '🎉 ניצחון!' : '🤖 המחשב ניצח';
+            modalText.textContent  = `${name} סידר 4 בשורה.`;
+            scores[currentPlayer]++;
+            document.getElementById(`player${currentPlayer}-score`).textContent = scores[currentPlayer];
+        }
+        setTimeout(openModal, 700);
+    }
+
+    function showPreview(col) {
+        if (!isGameActive || (isComputerGame && currentPlayer === 2)) return;
+        const cell = document.querySelector(`.preview-cell[data-col="${col}"]`);
+        if (getLowestEmptyRow(col) !== -1) cell.classList.add('active');
+    }
+
+    function hidePreview() {
+        document.querySelectorAll('.preview-cell').forEach(c => c.classList.remove('active'));
+    }
+
+    function updateStatus() {
+        if (!isGameActive) return;
+        const statusEl  = document.getElementById('status');
+        statusEl.classList.remove('status--win','status--lose','status--draw');
+        statusEl.classList.add('status--turn');
+        const turnLabel = document.getElementById('turn-label');
+        if (currentPlayer === 1) {
+            turnLabel.textContent = 'שחקן 1 (ורוד)';
+            turnLabel.style.color = 'var(--c1)';
+        } else {
+            turnLabel.textContent = isComputerGame ? 'המחשב (צהוב)' : 'שחקן 2 (צהוב)';
+            turnLabel.style.color = 'var(--c2-d)';
+        }
+    }
+
+    function changeGameMode() {
+        isComputerGame = document.getElementById('gameMode').value === 'computer';
+        document.getElementById('player2-label').textContent = isComputerGame ? 'CPU' : 'P2';
+        resetGame();
+    }
+
+    function resetGame() {
+        board = Array(ROWS).fill().map(() => Array(COLS).fill(''));
+        currentPlayer = 1;
+        isGameActive = true;
+        document.querySelectorAll('.c4-cell').forEach(c => { c.className = 'c4-cell'; });
+        hidePreview();
+        updateStatus();
+        closeModal();
+    }
+
+    /* ───────── AI: minimax with heuristic evaluation ───────── */
+    function evaluateWindow(window, player) {
+        const opponent = player === 1 ? 2 : 1;
+        const playerCount = window.filter(c => c === player).length;
+        const opponentCount = window.filter(c => c === opponent).length;
+        const emptyCount = window.filter(c => c === '').length;
+        let score = 0;
+        if (playerCount === 4)                    score += 100;
+        else if (playerCount === 3 && emptyCount === 1) score += 5;
+        else if (playerCount === 2 && emptyCount === 2) score += 2;
+        if (opponentCount === 3 && emptyCount === 1) score -= 4;
+        return score;
+    }
+
+    function evaluateBoard(player) {
+        let score = 0;
+        for (let row = 0; row < ROWS; row++) {
+            for (let col = 0; col < COLS - 3; col++) {
+                const w = [];
+                for (let i = 0; i < 4; i++) w.push(board[row][col + i]);
+                score += evaluateWindow(w, player);
+            }
+        }
+        for (let col = 0; col < COLS; col++) {
+            for (let row = 0; row < ROWS - 3; row++) {
+                const w = [];
+                for (let i = 0; i < 4; i++) w.push(board[row + i][col]);
+                score += evaluateWindow(w, player);
+            }
+        }
+        for (let row = 3; row < ROWS; row++) {
+            for (let col = 0; col < COLS - 3; col++) {
+                const w = [];
+                for (let i = 0; i < 4; i++) w.push(board[row - i][col + i]);
+                score += evaluateWindow(w, player);
+            }
+        }
+        for (let row = 3; row < ROWS; row++) {
+            for (let col = 3; col < COLS; col++) {
+                const w = [];
+                for (let i = 0; i < 4; i++) w.push(board[row - i][col - i]);
+                score += evaluateWindow(w, player);
+            }
+        }
+        const centerArray = board.map(row => row[Math.floor(COLS / 2)]);
+        const centerCount = centerArray.filter(c => c === player).length;
+        score += centerCount * 3;
+        return score;
+    }
+
+    function minimax(depth, alpha, beta, isMax) {
+        if (depth === 0) return [null, evaluateBoard(2)];
+        const validMoves = [];
+        for (let col = 0; col < COLS; col++) {
+            if (getLowestEmptyRow(col) !== -1) validMoves.push(col);
+        }
+        if (validMoves.length === 0) return [null, evaluateBoard(2)];
+
+        if (isMax) {
+            let maxEval = -Infinity, bestMove = validMoves[0];
+            for (const col of validMoves) {
+                const row = getLowestEmptyRow(col);
+                board[row][col] = 2;
+                if (checkWin(row, col)) { board[row][col] = ''; return [col, 100000]; }
+                const evalScore = minimax(depth - 1, alpha, beta, false)[1];
+                board[row][col] = '';
+                if (evalScore > maxEval) { maxEval = evalScore; bestMove = col; }
+                alpha = Math.max(alpha, maxEval);
+                if (beta <= alpha) break;
+            }
+            return [bestMove, maxEval];
+        } else {
+            let minEval = Infinity, bestMove = validMoves[0];
+            for (const col of validMoves) {
+                const row = getLowestEmptyRow(col);
+                board[row][col] = 1;
+                if (checkWin(row, col)) { board[row][col] = ''; return [col, -100000]; }
+                const evalScore = minimax(depth - 1, alpha, beta, true)[1];
+                board[row][col] = '';
+                if (evalScore < minEval) { minEval = evalScore; bestMove = col; }
+                beta = Math.min(beta, minEval);
+                if (beta <= alpha) break;
+            }
+            return [bestMove, minEval];
+        }
+    }
+
+    function findBestMove() {
+        for (let col = 0; col < COLS; col++) {
             const row = getLowestEmptyRow(col);
             if (row !== -1) {
-                makeMove(row, col);
+                board[row][col] = 2;
+                if (checkWin(row, col)) { board[row][col] = ''; return col; }
+                board[row][col] = '';
             }
         }
-
-        // מציאת השורה הנמוכה ביותר הפנויה בעמודה
-        function getLowestEmptyRow(col) {
-            for (let row = ROWS - 1; row >= 0; row--) {
-                if (board[row][col] === '') return row;
-            }
-            return -1;
-        }
-
-        // ביצוע מהלך
-        function makeMove(row, col) {
-            board[row][col] = currentPlayer;
-            updateCell(row, col);
-
-            if (checkWin(row, col)) {
-                endGame(false);
-                return;
-            }
-            if (checkDraw()) {
-                endGame(true);
-                return;
-            }
-
-            currentPlayer = currentPlayer === 1 ? 2 : 1;
-            updateStatus();
-
-            if (isComputerGame && currentPlayer === 2 && isGameActive) {
-                setTimeout(computerMove, 500);
-            }
-        }
-
-        // מהלך המחשב
-        function computerMove() {
-            const col = findBestMove();
+        for (let col = 0; col < COLS; col++) {
             const row = getLowestEmptyRow(col);
             if (row !== -1) {
-                makeMove(row, col);
+                board[row][col] = 1;
+                if (checkWin(row, col)) { board[row][col] = ''; return col; }
+                board[row][col] = '';
             }
         }
+        return minimax(5, -Infinity, Infinity, true)[0];
+    }
 
-        // חיפוש המהלך הטוב ביותר
-        function findBestMove() {
-            // בדיקת מהלך מנצח
-            for (let col = 0; col < COLS; col++) {
-                const row = getLowestEmptyRow(col);
-                if (row !== -1) {
-                    board[row][col] = 2;
-                    if (checkWin(row, col)) {
-                        board[row][col] = '';
-                        return col;
-                    }
-                    board[row][col] = '';
-                }
-            }
+    function openModal()  { document.getElementById('modal').classList.add('is-open'); }
+    function closeModal() { document.getElementById('modal').classList.remove('is-open'); }
+    document.getElementById('modal').addEventListener('click', e => {
+        if (e.target.id === 'modal') closeModal();
+    });
 
-            // בדיקת חסימת מהלך מנצח של היריב
-            for (let col = 0; col < COLS; col++) {
-                const row = getLowestEmptyRow(col);
-                if (row !== -1) {
-                    board[row][col] = 1;
-                    if (checkWin(row, col)) {
-                        board[row][col] = '';
-                        return col;
-                    }
-                    board[row][col] = '';
-                }
-            }
-
-            // אסטרטגיה מתקדמת - בהמשך נוסיף כאן את אלגוריתם המינימקס
-
-            // בינתיים - בחירה אקראית של עמודה פנויה
-            const availableCols = [];
-            for (let col = 0; col < COLS; col++) {
-                if (getLowestEmptyRow(col) !== -1) {
-                    availableCols.push(col);
-                }
-            }
-            return availableCols[Math.floor(Math.random() * availableCols.length)];
-        }
-
-        // עדכון תא בלוח
-        function updateCell(row, col) {
-            const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
-            cell.classList.add(`player${currentPlayer}`);
-        }
-
-        // בדיקת ניצחון
-        function checkWin(row, col) {
-            const directions = [
-                [[0, 1], [0, -1]], // אופקי
-                [[1, 0], [-1, 0]], // אנכי
-                [[1, 1], [-1, -1]], // אלכסון ראשי
-                [[1, -1], [-1, 1]] // אלכסון משני
-            ];
-
-            return directions.some(dir => {
-                let count = 1;
-                dir.forEach(([dx, dy]) => {
-                    let r = row + dx;
-                    let c = col + dy;
-                    while (
-                        r >= 0 && r < ROWS && 
-                        c >= 0 && c < COLS && 
-                        board[r][c] === currentPlayer
-                    ) {
-                        count++;
-                        r += dx;
-                        c += dy;
-                    }
-                });
-                return count >= 4;
-            });
-        }
-
-        // בדיקת תיקו
-        function checkDraw() {
-            return board[0].every(cell => cell !== '');
-        }
-
-        // סיום משחק
-        function endGame(isDraw) {
-            isGameActive = false;
-            if (isDraw) {
-                document.getElementById('status').textContent = 'תיקו!';
-            } else {
-                const winner = currentPlayer === 1 ? '1' : (isComputerGame ? 'מחשב' : '2');
-                document.getElementById('status').textContent = `שחקן ${winner} ניצח!`;
-                scores[currentPlayer]++;
-                document.getElementById(`player${currentPlayer}-score`).textContent = 
-                    scores[currentPlayer];
-            }
-        }
-
-        // הצגת תצוגה מקדימה
-        function showPreview(col) {
-            if (!isGameActive || (isComputerGame && currentPlayer === 2)) return;
-            
-            const previewCell = document.querySelector(`.preview-cell[data-col="${col}"]`);
-            if (getLowestEmptyRow(col) !== -1) {
-                previewCell.classList.add('active');
-            }
-        }
-
-        // הסתרת תצוגה מקדימה
-        function hidePreview() {
-            document.querySelectorAll('.preview-cell').forEach(cell => {
-                cell.classList.remove('active');
-            });
-        }
-
-        // עדכון סטטוס
-        function updateStatus() {
-            if (!isGameActive) return;
-            const currentPlayerText = currentPlayer === 1 ? '1' : (isComputerGame ? 'מחשב' : '2');
-            document.getElementById('status').textContent = `תור שחקן ${currentPlayerText}`;
-        }
-
-// שינוי מצב משחק
-        function changeGameMode() {
-            isComputerGame = document.getElementById('gameMode').value === 'computer';
-            document.getElementById('player2-label').textContent = 
-                isComputerGame ? 'מחשב' : 'שחקן 2';
-            resetGame();
-        }
-
-        // איפוס משחק
-        function resetGame() {
-            board = Array(ROWS).fill().map(() => Array(COLS).fill(''));
-            currentPlayer = 1;
-            isGameActive = true;
-
-            // איפוס הלוח הויזואלי
-            document.querySelectorAll('.cell').forEach(cell => {
-                cell.className = 'cell';
-            });
-
-            hidePreview();
-            updateStatus();
-        }
-
-        // הוספת אסטרטגיה מתקדמת למחשב עם מינימקס
-        function evaluateWindow(window, player) {
-            const opponent = player === 1 ? 2 : 1;
-            let score = 0;
-
-            // ספירת מספר החיילים של כל שחקן בחלון
-            const playerCount = window.filter(cell => cell === player).length;
-            const opponentCount = window.filter(cell => cell === opponent).length;
-            const emptyCount = window.filter(cell => cell === '').length;
-
-            // הערכת המצב
-            if (playerCount === 4) {
-                score += 100;
-            } else if (playerCount === 3 && emptyCount === 1) {
-                score += 5;
-            } else if (playerCount === 2 && emptyCount === 2) {
-                score += 2;
-            }
-
-            if (opponentCount === 3 && emptyCount === 1) {
-                score -= 4;
-            }
-
-            return score;
-        }
-
-        function evaluateBoard(player) {
-            let score = 0;
-
-            // בדיקה אופקית
-            for (let row = 0; row < ROWS; row++) {
-                for (let col = 0; col < COLS - 3; col++) {
-                    const window = [];
-                    for (let i = 0; i < 4; i++) {
-                        window.push(board[row][col + i]);
-                    }
-                    score += evaluateWindow(window, player);
-                }
-            }
-
-            // בדיקה אנכית
-            for (let col = 0; col < COLS; col++) {
-                for (let row = 0; row < ROWS - 3; row++) {
-                    const window = [];
-                    for (let i = 0; i < 4; i++) {
-                        window.push(board[row + i][col]);
-                    }
-                    score += evaluateWindow(window, player);
-                }
-            }
-
-            // בדיקה אלכסונית (ימין למעלה)
-            for (let row = 3; row < ROWS; row++) {
-                for (let col = 0; col < COLS - 3; col++) {
-                    const window = [];
-                    for (let i = 0; i < 4; i++) {
-                        window.push(board[row - i][col + i]);
-                    }
-                    score += evaluateWindow(window, player);
-                }
-            }
-
-            // בדיקה אלכסונית (שמאל למעלה)
-            for (let row = 3; row < ROWS; row++) {
-                for (let col = 3; col < COLS; col++) {
-                    const window = [];
-                    for (let i = 0; i < 4; i++) {
-                        window.push(board[row - i][col - i]);
-                    }
-                    score += evaluateWindow(window, player);
-                }
-            }
-
-            // העדפת עמודות מרכזיות
-            const centerArray = board.map(row => row[Math.floor(COLS/2)]);
-            const centerCount = centerArray.filter(cell => cell === player).length;
-            score += centerCount * 3;
-
-            return score;
-        }
-
-        function minimax(depth, alpha, beta, isMaximizing) {
-            // בדיקת מצב סופי או עומק מקסימלי
-            if (depth === 0) {
-                return [null, evaluateBoard(2)];
-            }
-
-            // מציאת עמודות זמינות
-            const validMoves = [];
-            for (let col = 0; col < COLS; col++) {
-                if (getLowestEmptyRow(col) !== -1) {
-                    validMoves.push(col);
-                }
-            }
-
-            // בדיקה אם המשחק נגמר
-            if (validMoves.length === 0) {
-                return [null, evaluateBoard(2)];
-            }
-
-            if (isMaximizing) {
-                let maxEval = -Infinity;
-                let bestMove = validMoves[0];
-
-                for (const col of validMoves) {
-                    const row = getLowestEmptyRow(col);
-                    board[row][col] = 2;
-                    
-                    if (checkWin(row, col)) {
-                        board[row][col] = '';
-                        return [col, 100000];
-                    }
-                    
-                    const evaluation = minimax(depth - 1, alpha, beta, false)[1];
-                    board[row][col] = '';
-
-                    if (evaluation > maxEval) {
-                        maxEval = evaluation;
-                        bestMove = col;
-                    }
-                    alpha = Math.max(alpha, maxEval);
-                    if (beta <= alpha) break;
-                }
-                return [bestMove, maxEval];
-            } else {
-                let minEval = Infinity;
-                let bestMove = validMoves[0];
-
-                for (const col of validMoves) {
-                    const row = getLowestEmptyRow(col);
-                    board[row][col] = 1;
-                    
-                    if (checkWin(row, col)) {
-                        board[row][col] = '';
-                        return [col, -100000];
-                    }
-                    
-                    const evaluation = minimax(depth - 1, alpha, beta, true)[1];
-                    board[row][col] = '';
-
-                    if (evaluation < minEval) {
-                        minEval = evaluation;
-                        bestMove = col;
-                    }
-                    beta = Math.min(beta, minEval);
-                    if (beta <= alpha) break;
-                }
-                return [bestMove, minEval];
-            }
-        }
-
-        // עדכון פונקצית findBestMove עם האלגוריתם החדש
-        function findBestMove() {
-            // בדיקת מהלך מנצח מיידי
-            for (let col = 0; col < COLS; col++) {
-                const row = getLowestEmptyRow(col);
-                if (row !== -1) {
-                    board[row][col] = 2;
-                    if (checkWin(row, col)) {
-                        board[row][col] = '';
-                        return col;
-                    }
-                    board[row][col] = '';
-                }
-            }
-
-            // בדיקת חסימת מהלך מנצח של היריב
-            for (let col = 0; col < COLS; col++) {
-                const row = getLowestEmptyRow(col);
-                if (row !== -1) {
-                    board[row][col] = 1;
-                    if (checkWin(row, col)) {
-                        board[row][col] = '';
-                        return col;
-                    }
-                    board[row][col] = '';
-                }
-            }
-
-            // שימוש במינימקס לעומק 5
-            return minimax(5, -Infinity, Infinity, true)[0];
-        }
-
-        // אתחול המשחק
-        createBoard();
-    </script>
+    createBoard();
+    updateStatus();
+</script>
 </body>
-</html><!DOCTYPE html>
-<html dir="rtl" lang="he">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>4 בשורה</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Varela+Round&display=swap');
-
-        :root {
-            --primary: #4A90E2;
-            --background: #f0f2f5;
-            --text: #2C3E50;
-            --player1: #dc3545;
-            --player2: #ffc107;
-            --board: #4A90E2;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Varela Round', sans-serif;
-        }
-
-        body {
-            background-color: var(--background);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2rem;
-        }
-
-        .back-button {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            padding: 0.5rem 1rem;
-            background: white;
-            border: 2px solid var(--primary);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .back-button:hover {
-            background: var(--primary);
-            color: white;
-        }
-
-        .game-container {
-            background: white;
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            max-width: 800px;
-            width: 100%;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .game-board {
-            background: var(--board);
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
-            padding: 10px;
-            border-radius: 15px;
-            margin: 2rem auto;
-            max-width: 700px;
-        }
-
-        .cell {
-            aspect-ratio: 1;
-            background: white;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .cell:hover {
-            background: #e9ecef;
-        }
-
-        .cell.player1 {
-            background: var(--player1);
-            animation: dropPiece 0.5s ease-in;
-        }
-
-        .cell.player2 {
-            background: var(--player2);
-            animation: dropPiece 0.5s ease-in;
-        }
-
-        @keyframes dropPiece {
-            0% {
-                transform: translateY(-300%);
-            }
-            100% {
-                transform: translateY(0);
-            }
-        }
-
-        .controls {
-            display: grid;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        select, button {
-            padding: 0.8rem 1.5rem;
-            border-radius: 10px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-
-        select {
-            border: 2px solid var(--primary);
-            background: white;
-        }
-
-        button {
-            background: var(--primary);
-            color: white;
-            border: none;
-        }
-
-        button:hover {
-            background: #357ABD;
-        }
-
-        .status {
-            text-align: center;
-            margin: 1rem 0;
-            font-size: 1.2rem;
-            color: var(--text);
-            min-height: 2rem;
-        }
-
-        .score {
-            display: flex;
-            justify-content: space-around;
-            margin: 1rem 0;
-        }
-
-        .score-item {
-            text-align: center;
-            padding: 1rem;
-            border-radius: 10px;
-            background: #f8f9fa;
-            min-width: 120px;
-        }
-
-        .score-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary);
-            margin-top: 0.5rem;
-        }
-
-        .preview-row {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 10px;
-            padding: 10px;
-            margin-bottom: -1rem;
-        }
-
-        .preview-cell {
-            aspect-ratio: 1;
-            border-radius: 50%;
-            border: 2px dashed #ccc;
-            opacity: 0;
-            transition: all 0.3s ease;
-        }
-
-        .preview-cell.active {
-            opacity: 0.5;
-            background: var(--player1);
-        }
-    </style>
-</head>
 </html>

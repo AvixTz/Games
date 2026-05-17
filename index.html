@@ -3,422 +3,713 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>פורטל משחקי חשיבה לילדים</title>
+    <title>מגרש המשחקים · פורטל משחקי חשיבה</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Suez+One&family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Varela+Round&display=swap');
-        
         :root {
-            --primary: #4A90E2;
-            --secondary: #50E3C2;
-            --success: #5CB85C;
-            --warning: #F0AD4E;
-            --danger: #D9534F;
-            --info: #5BC0DE;
-            --purple: #B96AC9;
-            --orange: #FF7043;
-            --teal: #009688;
-            --pink: #E91E63;
+            --ink: #111014;
+            --paper: #FFF3D6;
+            --paper-2: #FFE7A8;
+            --cream: #FFFBF0;
+
+            --c1: #FF3D7F;   --c1-d: #B91E58;
+            --c2: #FFC02E;   --c2-d: #C68900;
+            --c3: #3D5AFE;   --c3-d: #1934C8;
+            --c4: #00C896;   --c4-d: #00805F;
+            --c5: #FF6B3D;   --c5-d: #C04518;
+            --c6: #9B59FF;   --c6-d: #6028C7;
+            --c7: #38B6FF;   --c7-d: #0F7BBE;
+            --c8: #FF4FA3;   --c8-d: #B62875;
+            --c9: #B8E62D;   --c9-d: #6F9B11;
+            --c10: #FF8A3D;  --c10-d: #C25812;
+
+            --shadow: 8px 8px 0 var(--ink);
+            --shadow-hover: 12px 12px 0 var(--ink);
+            --shadow-sm: 4px 4px 0 var(--ink);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Varela Round', sans-serif;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body { overflow-x: hidden; }
 
         body {
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Rubik', system-ui, sans-serif;
+            font-weight: 500;
+            color: var(--ink);
+            background-color: var(--paper);
+            background-image:
+                radial-gradient(circle at 1px 1px, rgba(17,16,20,0.18) 1.2px, transparent 0),
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,192,46,0.55) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 90% 100%, rgba(255,61,127,0.25) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 10% 90%, rgba(61,90,254,0.18) 0%, transparent 60%);
+            background-size: 22px 22px, 100% 100%, 100% 100%, 100% 100%;
             min-height: 100vh;
-            padding: 2rem;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 3rem;
-            color: #2C3E50;
-        }
-
-        .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        .header p {
-            font-size: 1.2rem;
-            color: #666;
-        }
-
-        .games-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-            padding: 1rem;
-        }
-
-        .game-card {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 2.5rem 1.25rem 4rem;
             position: relative;
         }
 
-        .game-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        /* floating background decorations */
+        .deco {
+            position: absolute;
+            pointer-events: none;
+            user-select: none;
+            opacity: 0.9;
+            z-index: 0;
+        }
+        .deco.d1 { top: 6%;  left: 5%;  animation: float 7s ease-in-out infinite; }
+        .deco.d2 { top: 14%; right: 7%; animation: float 9s ease-in-out infinite reverse; }
+        .deco.d3 { top: 42%; left: 2%;  animation: spin-slow 22s linear infinite; }
+        .deco.d4 { top: 60%; right: 3%; animation: float 8s ease-in-out infinite; }
+        .deco.d5 { bottom: 8%; left: 12%; animation: spin-slow 30s linear infinite reverse; }
+        .deco.d6 { bottom: 14%; right: 14%; animation: float 6s ease-in-out infinite reverse; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50%      { transform: translateY(-14px) rotate(6deg); }
+        }
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
         }
 
+        .container {
+            max-width: 1240px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ─── Hero ─── */
+        .hero {
+            position: relative;
+            text-align: center;
+            padding: 2rem 1rem 3rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .badge-strip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            background: var(--ink);
+            color: var(--paper-2);
+            padding: 0.45rem 1.1rem;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            letter-spacing: 0.04em;
+            margin-bottom: 1.25rem;
+            box-shadow: var(--shadow-sm);
+            transform: rotate(-2deg);
+        }
+        .badge-strip .dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--c4);
+            box-shadow: 0 0 0 3px rgba(0,200,150,0.25);
+            animation: pulse 1.6s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1);   opacity: 1; }
+            50%      { transform: scale(1.3); opacity: 0.6; }
+        }
+
+        .hero h1 {
+            font-family: 'Suez One', 'Rubik', serif;
+            font-size: clamp(2.6rem, 7vw, 5.2rem);
+            line-height: 1.05;
+            color: var(--ink);
+            position: relative;
+            display: inline-block;
+            padding: 0 0.4em;
+            text-shadow:
+                4px 4px 0 var(--c2),
+                8px 8px 0 var(--c1);
+        }
+        .hero h1 .wave {
+            display: inline-block;
+            transform-origin: 70% 70%;
+            animation: wave 2.4s ease-in-out infinite;
+        }
+        @keyframes wave {
+            0%, 60%, 100% { transform: rotate(0deg); }
+            10%, 30% { transform: rotate(-14deg); }
+            20%, 40% { transform: rotate(16deg); }
+        }
+
+        .hero p.subtitle {
+            margin-top: 1.5rem;
+            font-size: clamp(1rem, 1.6vw, 1.25rem);
+            font-weight: 500;
+            color: #3a3640;
+            max-width: 38rem;
+            margin-inline: auto;
+        }
+
+        .hero-chips {
+            display: flex;
+            gap: 0.6rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 1.6rem;
+        }
+        .chip {
+            background: var(--cream);
+            border: 2.5px solid var(--ink);
+            padding: 0.45rem 1rem;
+            border-radius: 999px;
+            font-weight: 700;
+            font-size: 0.92rem;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.2s ease;
+        }
+        .chip:nth-child(1) { transform: rotate(-3deg); }
+        .chip:nth-child(2) { transform: rotate(2deg);  }
+        .chip:nth-child(3) { transform: rotate(-1deg); }
+        .chip:nth-child(4) { transform: rotate(3deg);  }
+        .chip:hover { transform: translateY(-3px) rotate(0deg); }
+
+        /* ─── Grid ─── */
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2.2rem 1.8rem;
+            padding: 1rem 0.5rem 0;
+        }
+
+        /* ─── Card ─── */
+        .game-card {
+            --card-color: var(--c1);
+            --card-color-d: var(--c1-d);
+
+            position: relative;
+            background: var(--cream);
+            border: 3.5px solid var(--ink);
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: transform 0.25s cubic-bezier(.34,1.56,.64,1),
+                        box-shadow 0.25s ease;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transform: translateY(24px) rotate(var(--rot, 0deg));
+            animation: pop-in 0.6s cubic-bezier(.34,1.56,.64,1) forwards;
+        }
+
+        @keyframes pop-in {
+            to { opacity: 1; transform: translateY(0) rotate(var(--rot, 0deg)); }
+        }
+
+        .game-card:hover {
+            transform: translateY(-6px) rotate(0deg) !important;
+            box-shadow: var(--shadow-hover);
+        }
+
+        /* color band on top */
         .game-icon {
-            height: 160px;
+            position: relative;
+            height: 150px;
+            background: var(--card-color);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 4rem;
-            color: white;
+            font-size: 4.4rem;
+            line-height: 1;
+            border-bottom: 3.5px solid var(--ink);
+            overflow: hidden;
+        }
+        .game-icon::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 20% 30%, rgba(255,255,255,0.4) 0%, transparent 22%),
+                radial-gradient(circle at 80% 70%, rgba(0,0,0,0.12) 0%, transparent 28%),
+                repeating-linear-gradient(45deg, rgba(255,255,255,0.07) 0 6px, transparent 6px 14px);
+            pointer-events: none;
+        }
+        .game-icon .emoji {
+            position: relative;
+            display: inline-block;
+            filter: drop-shadow(3px 4px 0 rgba(0,0,0,0.35));
+            transition: transform 0.4s cubic-bezier(.34,1.56,.64,1);
+        }
+        .game-card:hover .game-icon .emoji {
+            transform: scale(1.15) rotate(-8deg);
+        }
+
+        /* age sticker */
+        .game-age {
+            position: absolute;
+            top: 0.75rem;
+            left: 0.75rem;
+            background: var(--cream);
+            border: 2.5px solid var(--ink);
+            color: var(--ink);
+            padding: 0.3rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            box-shadow: 3px 3px 0 var(--ink);
+            transform: rotate(-6deg);
+            z-index: 2;
         }
 
         .game-content {
-            padding: 1.5rem;
+            padding: 1.4rem 1.3rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
         }
 
         .game-title {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-            color: #2C3E50;
+            font-family: 'Suez One', 'Rubik', serif;
+            font-size: 1.6rem;
+            line-height: 1.15;
+            margin-bottom: 0.6rem;
+            color: var(--ink);
         }
 
-        .game-description {
-            font-size: 1rem;
-            color: #666;
-            margin-bottom: 1rem;
-            min-height: 60px;
-        }
-
-        .game-button {
-            display: inline-block;
-            padding: 0.8rem 1.5rem;
-            background-color: var(--primary);
-            color: white;
-            text-decoration: none;
-            border-radius: 25px;
-            transition: background-color 0.3s ease;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-            width: 100%;
-            text-align: center;
-        }
-
-        .game-button:hover {
-            background-color: #357ABD;
-        }
-
-        .game-age {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: rgba(255,255,255,0.9);
-            padding: 0.3rem 0.8rem;
-            border-radius: 15px;
-            font-size: 0.9rem;
-            color: #666;
-        }
-
-        /* צבעי רקע לכרטיסי משחק */
-        .bg-primary { background-color: var(--primary); }
-        .bg-secondary { background-color: var(--secondary); }
-        .bg-success { background-color: var(--success); }
-        .bg-warning { background-color: var(--warning); }
-        .bg-danger { background-color: var(--danger); }
-        .bg-info { background-color: var(--info); }
-        .bg-purple { background-color: var(--purple); }
-        .bg-orange { background-color: var(--orange); }
-        .bg-teal { background-color: var(--teal); }
-        .bg-pink { background-color: var(--pink); }
-
-        /* תגי קטגוריות */
         .game-tags {
             display: flex;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
+            gap: 0.4rem;
+            margin-bottom: 0.8rem;
             flex-wrap: wrap;
         }
 
         .game-tag {
-            padding: 0.2rem 0.8rem;
-            border-radius: 12px;
-            font-size: 0.8rem;
-            color: white;
-            background-color: rgba(0,0,0,0.1);
+            padding: 0.18rem 0.7rem;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--ink);
+            background: var(--paper-2);
+            border: 2px solid var(--ink);
         }
 
-        @media (max-width: 768px) {
-            .games-grid {
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: 1rem;
-            }
+        .game-description {
+            font-size: 0.97rem;
+            color: #3a3640;
+            margin-bottom: 1.3rem;
+            line-height: 1.45;
+            flex: 1;
+        }
 
-            .header h1 {
-                font-size: 2rem;
-            }
+        .game-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.85rem 1.2rem;
+            background: var(--ink);
+            color: var(--cream);
+            text-decoration: none;
+            border-radius: 14px;
+            border: 3px solid var(--ink);
+            font-family: 'Rubik', sans-serif;
+            font-size: 1rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+            box-shadow: 4px 4px 0 var(--card-color-d);
+            width: 100%;
+        }
+        .game-button:hover {
+            background: var(--card-color);
+            color: var(--ink);
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 var(--card-color-d);
+        }
+        .game-button:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0 var(--card-color-d);
+        }
+        .game-button .arrow {
+            display: inline-block;
+            transition: transform 0.2s ease;
+        }
+        .game-button:hover .arrow {
+            transform: translateX(-4px);
+        }
 
-            .header p {
-                font-size: 1rem;
+        /* "coming soon" treatment */
+        .game-card.soon {
+            opacity: 1;
+        }
+        .game-card.soon .game-icon { filter: saturate(0.4) brightness(0.95); }
+        .game-card.soon .game-button {
+            background: #6a6670;
+            box-shadow: 4px 4px 0 #2c2932;
+            cursor: not-allowed;
+        }
+        .game-card.soon .game-button:hover {
+            background: #6a6670;
+            color: var(--cream);
+            transform: none;
+            box-shadow: 4px 4px 0 #2c2932;
+        }
+        .game-card.soon::after {
+            content: "בקרוב";
+            position: absolute;
+            top: 18px;
+            right: -42px;
+            transform: rotate(35deg);
+            background: var(--ink);
+            color: var(--c2);
+            font-weight: 900;
+            font-size: 0.88rem;
+            padding: 0.3rem 3rem;
+            box-shadow: 0 2px 0 rgba(0,0,0,0.3);
+            z-index: 3;
+            letter-spacing: 0.06em;
+        }
+
+        /* ─── per-card palettes & rotations ─── */
+        .game-card:nth-child(1) { --card-color: var(--c1); --card-color-d: var(--c1-d); --rot:  -1.2deg; }
+        .game-card:nth-child(2) { --card-color: var(--c3); --card-color-d: var(--c3-d); --rot:   1.4deg; }
+        .game-card:nth-child(3) { --card-color: var(--c4); --card-color-d: var(--c4-d); --rot:  -0.6deg; }
+        .game-card:nth-child(4) { --card-color: var(--c2); --card-color-d: var(--c2-d); --rot:   1.1deg; }
+        .game-card:nth-child(5) { --card-color: var(--c6); --card-color-d: var(--c6-d); --rot:  -1.8deg; }
+        .game-card:nth-child(6) { --card-color: var(--c7); --card-color-d: var(--c7-d); --rot:   0.8deg; }
+        .game-card:nth-child(7) { --card-color: var(--c8); --card-color-d: var(--c8-d); --rot:  -0.4deg; }
+        .game-card:nth-child(8) { --card-color: var(--c10); --card-color-d: var(--c10-d); --rot:   1.6deg; }
+        .game-card:nth-child(9) { --card-color: var(--c9); --card-color-d: var(--c9-d); --rot:  -1.0deg; }
+        .game-card:nth-child(10){ --card-color: var(--c5); --card-color-d: var(--c5-d); --rot:   1.2deg; }
+        .game-card:nth-child(11){ --card-color: var(--c4); --card-color-d: var(--c4-d); --rot:  -1.4deg; }
+
+        /* staggered entrance */
+        .game-card:nth-child(1)  { animation-delay: 0.05s; }
+        .game-card:nth-child(2)  { animation-delay: 0.12s; }
+        .game-card:nth-child(3)  { animation-delay: 0.19s; }
+        .game-card:nth-child(4)  { animation-delay: 0.26s; }
+        .game-card:nth-child(5)  { animation-delay: 0.33s; }
+        .game-card:nth-child(6)  { animation-delay: 0.40s; }
+        .game-card:nth-child(7)  { animation-delay: 0.47s; }
+        .game-card:nth-child(8)  { animation-delay: 0.54s; }
+        .game-card:nth-child(9)  { animation-delay: 0.61s; }
+        .game-card:nth-child(10) { animation-delay: 0.68s; }
+        .game-card:nth-child(11) { animation-delay: 0.75s; }
+
+        /* ─── footer ─── */
+        .footer {
+            margin-top: 4rem;
+            text-align: center;
+            font-weight: 700;
+            color: #3a3640;
+            position: relative;
+            z-index: 1;
+        }
+        .footer .heart {
+            display: inline-block;
+            color: var(--c1);
+            animation: heart 1.4s ease-in-out infinite;
+        }
+        @keyframes heart {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.25); }
+        }
+
+        @media (max-width: 720px) {
+            body { padding: 1.5rem 0.75rem 3rem; }
+            .games-grid { gap: 1.8rem 1.1rem; }
+            .game-icon { height: 130px; font-size: 3.8rem; }
+            .hero { padding: 1rem 0.5rem 2rem; }
+            .deco { display: none; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
             }
+            .game-card { opacity: 1; transform: rotate(var(--rot, 0deg)); }
         }
     </style>
 </head>
 <body>
+
+    <!-- floating decorations -->
+    <svg class="deco d1" width="70" height="70" viewBox="0 0 70 70" fill="none" aria-hidden="true">
+        <path d="M35 4 L43 27 L66 27 L48 41 L55 64 L35 50 L15 64 L22 41 L4 27 L27 27 Z"
+              fill="#FFC02E" stroke="#111014" stroke-width="3" stroke-linejoin="round"/>
+    </svg>
+    <svg class="deco d2" width="60" height="60" viewBox="0 0 60 60" fill="none" aria-hidden="true">
+        <circle cx="30" cy="30" r="22" fill="#FF3D7F" stroke="#111014" stroke-width="3"/>
+        <circle cx="22" cy="25" r="3" fill="#111014"/>
+        <circle cx="38" cy="25" r="3" fill="#111014"/>
+        <path d="M20 38 Q30 46 40 38" stroke="#111014" stroke-width="3" stroke-linecap="round" fill="none"/>
+    </svg>
+    <svg class="deco d3" width="55" height="55" viewBox="0 0 55 55" fill="none" aria-hidden="true">
+        <path d="M27.5 5 L33 22 L51 22 L36 33 L41 50 L27.5 40 L14 50 L19 33 L4 22 L22 22 Z"
+              fill="#3D5AFE" stroke="#111014" stroke-width="3" stroke-linejoin="round"/>
+    </svg>
+    <svg class="deco d4" width="65" height="65" viewBox="0 0 65 65" fill="none" aria-hidden="true">
+        <rect x="8" y="8" width="49" height="49" rx="10" fill="#00C896" stroke="#111014" stroke-width="3" transform="rotate(12 32 32)"/>
+        <text x="32" y="42" text-anchor="middle" font-size="28" font-family="Suez One" fill="#111014" transform="rotate(12 32 32)">!</text>
+    </svg>
+    <svg class="deco d5" width="60" height="60" viewBox="0 0 60 60" fill="none" aria-hidden="true">
+        <path d="M10 30 Q20 10 30 30 T50 30" stroke="#9B59FF" stroke-width="5" fill="none" stroke-linecap="round"/>
+        <path d="M10 42 Q20 22 30 42 T50 42" stroke="#9B59FF" stroke-width="5" fill="none" stroke-linecap="round"/>
+    </svg>
+    <svg class="deco d6" width="70" height="70" viewBox="0 0 70 70" fill="none" aria-hidden="true">
+        <circle cx="35" cy="35" r="28" fill="#FF8A3D" stroke="#111014" stroke-width="3"/>
+        <circle cx="35" cy="35" r="18" fill="#FFC02E" stroke="#111014" stroke-width="3"/>
+        <circle cx="35" cy="35" r="8" fill="#FF3D7F" stroke="#111014" stroke-width="3"/>
+    </svg>
+
 <div class="container">
-    <header class="header">
-        <h1>🎮 פורטל משחקי חשיבה לילדים</h1>
-        <p>בואו לשחק, ללמוד ולהתפתח עם מגוון משחקים מאתגרים</p>
+    <header class="hero">
+        <div class="badge-strip">
+            <span class="dot"></span>
+            10 משחקי חשיבה · מוכן לשחק
+        </div>
+        <h1>
+            מגרש <span class="wave">🎮</span> המשחקים
+        </h1>
+        <p class="subtitle">
+            אוסף של חידות, משחקי לוח ומשחקי מחשבה מהנים — בנויים לפתח חשיבה, להעיר את הסקרנות וקצת לאתגר את ההורים בדרך.
+        </p>
+        <div class="hero-chips">
+            <span class="chip">🧠 חשיבה</span>
+            <span class="chip">♟️ אסטרטגיה</span>
+            <span class="chip">🔢 מתמטיקה</span>
+            <span class="chip">📝 שפה</span>
+        </div>
     </header>
 
     <div class="games-grid">
-        <!-- איקס עיגול -->
-        <div class="game-card">
-            <div class="game-icon bg-primary">⭕</div>
-            <div class="game-age">גיל: 5+</div>
+
+        <!-- 1: איקס עיגול -->
+        <a class="game-card" href="tictactoe.html">
+            <div class="game-icon">
+                <div class="game-age">גיל 5+</div>
+                <span class="emoji">⭕</span>
+            </div>
             <div class="game-content">
                 <h2 class="game-title">איקס עיגול</h2>
                 <div class="game-tags">
                     <span class="game-tag">אסטרטגיה</span>
                     <span class="game-tag">חשיבה</span>
                 </div>
-                <p class="game-description">משחק חשיבה קלאסי לפיתוח אסטרטגיה ותכנון מהלכים</p>
-                <button class="game-button" onclick="window.location.href='tictactoe.html'">שחק עכשיו</button>
+                <p class="game-description">הקלאסיקה הנצחית. שלוש בשורה — נשמע פשוט, עד שמנסים לנצח את האח הגדול.</p>
+                <span class="game-button">
+                    שחק עכשיו <span class="arrow">←</span>
+                </span>
             </div>
-        </div>
+        </a>
 
-        <!-- 4 בשורה -->
-        <div class="game-card">
-            <div class="game-icon bg-secondary">🔵</div>
-            <div class="game-age">גיל: 6+</div>
+        <!-- 2: 4 בשורה -->
+        <a class="game-card" href="connect4.html">
+            <div class="game-icon">
+                <div class="game-age">גיל 6+</div>
+                <span class="emoji">🔵</span>
+            </div>
             <div class="game-content">
                 <h2 class="game-title">4 בשורה</h2>
                 <div class="game-tags">
                     <span class="game-tag">אסטרטגיה</span>
                     <span class="game-tag">תכנון</span>
                 </div>
-                <p class="game-description">משחק אסטרטגי מהנה לפיתוח חשיבה מרחבית</p>
-                <button class="game-button" onclick="window.location.href='connect4.html'">שחק עכשיו</button>
+                <p class="game-description">הפילו דיסקיות, בנו רצף של ארבע וחסמו את היריב. מהיר, ממכר וכיף.</p>
+                <span class="game-button">
+                    שחק עכשיו <span class="arrow">←</span>
+                </span>
             </div>
-        </div>
+        </a>
 
-        <!-- סודוקו -->
-        <div class="game-card">
-            <div class="game-icon bg-success">🔢</div>
-            <div class="game-age">גיל: 8+</div>
+        <!-- 3: סודוקו -->
+        <a class="game-card" href="sudoku.html">
+            <div class="game-icon">
+                <div class="game-age">גיל 8+</div>
+                <span class="emoji">🔢</span>
+            </div>
             <div class="game-content">
                 <h2 class="game-title">סודוקו</h2>
                 <div class="game-tags">
                     <span class="game-tag">לוגיקה</span>
                     <span class="game-tag">מספרים</span>
                 </div>
-                <p class="game-description">חידת מספרים מאתגרת לפיתוח חשיבה לוגית</p>
-                <button class="game-button" onclick="window.location.href='sudoku.html'">שחק עכשיו</button>
+                <p class="game-description">לוח של 9×9, תשעה ספרות, ואפס מקום לטעויות. אתגר קר־רוח לחשיבה לוגית.</p>
+                <span class="game-button">
+                    שחק עכשיו <span class="arrow">←</span>
+                </span>
+            </div>
+        </a>
+
+        <!-- 4: חידון מתמטי -->
+        <a class="game-card" href="math-quiz.html">
+            <div class="game-icon">
+                <div class="game-age">גיל 7+</div>
+                <span class="emoji">➗</span>
+            </div>
+            <div class="game-content">
+                <h2 class="game-title">חידון מתמטי</h2>
+                <div class="game-tags">
+                    <span class="game-tag">מתמטיקה</span>
+                    <span class="game-tag">חישובים</span>
+                </div>
+                <p class="game-description">תרגילים בקצב משלכם — חיבור, חיסור, כפל וחילוק. כל תשובה נכונה זה ניצחון קטן.</p>
+                <span class="game-button">
+                    שחק עכשיו <span class="arrow">←</span>
+                </span>
+            </div>
+        </a>
+
+        <!-- 5: שחמט קטן -->
+        <a class="game-card" href="MiniChess.html">
+            <div class="game-icon">
+                <div class="game-age">גיל 8+</div>
+                <span class="emoji">♟️</span>
+            </div>
+            <div class="game-content">
+                <h2 class="game-title">שחמט קטן</h2>
+                <div class="game-tags">
+                    <span class="game-tag">אסטרטגיה</span>
+                    <span class="game-tag">תכנון</span>
+                </div>
+                <p class="game-description">גרסה מפושטת של שחמט — לוח קטן, חוקים זריזים, חשיבה ענקית.</p>
+                <span class="game-button">
+                    שחק עכשיו <span class="arrow">←</span>
+                </span>
+            </div>
+        </a>
+
+        <!-- 6: זיכרון -->
+        <a class="game-card" href="memory.html">
+            <div class="game-icon">
+                <div class="game-age">גיל 5+</div>
+                <span class="emoji">🎴</span>
+            </div>
+            <div class="game-content">
+                <h2 class="game-title">משחק זיכרון</h2>
+                <div class="game-tags">
+                    <span class="game-tag">זיכרון</span>
+                    <span class="game-tag">ריכוז</span>
+                </div>
+                <p class="game-description">הפכו את הקלפים, מצאו זוגות, ואל תשכחו איפה הסתתר הצלם הצהוב.</p>
+                <span class="game-button">
+                    שחק עכשיו <span class="arrow">←</span>
+                </span>
+            </div>
+        </a>
+
+        <!-- 7: תפזורת מילים -->
+        <a class="game-card" href="Findword.html">
+            <div class="game-icon">
+                <div class="game-age">גיל 7+</div>
+                <span class="emoji">📝</span>
+            </div>
+            <div class="game-content">
+                <h2 class="game-title">תפזורת מילים</h2>
+                <div class="game-tags">
+                    <span class="game-tag">שפה</span>
+                    <span class="game-tag">חיפוש</span>
+                </div>
+                <p class="game-description">חיפוש מילים נחבאות בין שלל אותיות — אוצר מילים שהופך לציד אמיתי.</p>
+                <span class="game-button">
+                    שחק עכשיו <span class="arrow">←</span>
+                </span>
+            </div>
+        </a>
+
+        <!-- 8: חשבון וקריאה (כיתה א') -->
+        <a class="game-card" href="משחק ילדים/index.html">
+            <div class="game-icon">
+                <div class="game-age">גיל 6+</div>
+                <span class="emoji">🎈</span>
+            </div>
+            <div class="game-content">
+                <h2 class="game-title">חשבון וקריאה</h2>
+                <div class="game-tags">
+                    <span class="game-tag">כיתה א'</span>
+                    <span class="game-tag">שפה</span>
+                </div>
+                <p class="game-description">תרגול חיבור וחיסור משולב עם מסע סיפורים והבנת הנקרא — אידיאלי לראשוני־קריאה.</p>
+                <span class="game-button">
+                    שחק עכשיו <span class="arrow">←</span>
+                </span>
+            </div>
+        </a>
+
+        <!-- 9: מגדלי האנוי (בקרוב) -->
+        <div class="game-card soon" data-game="hanoi" role="button" aria-disabled="true">
+            <div class="game-icon">
+                <div class="game-age">גיל 9+</div>
+                <span class="emoji">🗼</span>
+            </div>
+            <div class="game-content">
+                <h2 class="game-title">מגדלי האנוי</h2>
+                <div class="game-tags">
+                    <span class="game-tag">לוגיקה</span>
+                    <span class="game-tag">תכנון</span>
+                </div>
+                <p class="game-description">חידה קלאסית של העברת דיסקיות בין עמודים — קלה בהבנה, מצמררת בפתרון.</p>
+                <button class="game-button" type="button" disabled>בקרוב</button>
             </div>
         </div>
 
-            <!-- חידון מתמטי -->
-            <div class="game-card">
-                <div class="game-icon bg-warning">➗</div>
-                <div class="game-age">גיל: 7+</div>
-                <div class="game-content">
-                    <h2 class="game-title">חידון מתמטי</h2>
-                    <div class="game-tags">
-                        <span class="game-tag">מתמטיקה</span>
-                        <span class="game-tag">חישובים</span>
-                    </div>
-                    <p class="game-description">תרגילי מתמטיקה מותאמים לגיל ולרמה</p>
-                    <button class="game-button" onclick="startGame('mathQuiz')">שחק עכשיו</button>
-                </div>
+        <!-- 9: פאזל הזזה (בקרוב) -->
+        <div class="game-card soon" data-game="slidingPuzzle" role="button" aria-disabled="true">
+            <div class="game-icon">
+                <div class="game-age">גיל 6+</div>
+                <span class="emoji">🧩</span>
             </div>
-
-            <!-- שחמט קטן -->
-            <div class="game-card">
-                <div class="game-icon bg-danger">♟️</div>
-                <div class="game-age">גיל: 8+</div>
-                <div class="game-content">
-                    <h2 class="game-title">שחמט קטן</h2>
-                    <div class="game-tags">
-                        <span class="game-tag">אסטרטגיה</span>
-                        <span class="game-tag">תכנון</span>
-                    </div>
-                    <p class="game-description">גרסה מפושטת של שחמט לפיתוח חשיבה אסטרטגית</p>
-                    <button class="game-button" onclick="window.location.href='MiniChess.html'">שחק עכשיו</button>
+            <div class="game-content">
+                <h2 class="game-title">פאזל הזזה</h2>
+                <div class="game-tags">
+                    <span class="game-tag">מרחבי</span>
+                    <span class="game-tag">תכנון</span>
                 </div>
-            </div>
-
-            <!-- מגדלי האנוי -->
-            <div class="game-card">
-                <div class="game-icon bg-info">🗼</div>
-                <div class="game-age">גיל: 9+</div>
-                <div class="game-content">
-                    <h2 class="game-title">מגדלי האנוי</h2>
-                    <div class="game-tags">
-                        <span class="game-tag">לוגיקה</span>
-                        <span class="game-tag">תכנון</span>
-                    </div>
-                    <p class="game-description">חידת מגדלים קלאסית לפיתוח חשיבה לוגית</p>
-                    <button class="game-button" onclick="startGame('hanoi')">שחק עכשיו</button>
-                </div>
-            </div>
-
-            <!-- זיכרון -->
-            <div class="game-card">
-                <div class="game-icon bg-purple">🎴</div>
-                <div class="game-age">גיל: 5+</div>
-                <div class="game-content">
-                    <h2 class="game-title">משחק זיכרון</h2>
-                    <div class="game-tags">
-                        <span class="game-tag">זיכרון</span>
-                        <span class="game-tag">ריכוז</span>
-                    </div>
-                    <p class="game-description">משחק זיכרון קלאסי לפיתוח ריכוז וזיכרון חזותי</p>
-                    <button class="game-button" onclick="window.location.href='memory.html'">שחק עכשיו</button>
-                </div>
-            </div>
-
-            <!-- תפזורת מילים -->
-            <div class="game-card">
-                <div class="game-icon bg-orange">📝</div>
-                <div class="game-age">גיל: 7+</div>
-                <div class="game-content">
-                    <h2 class="game-title">תפזורת מילים</h2>
-                    <div class="game-tags">
-                        <span class="game-tag">שפה</span>
-                        <span class="game-tag">חיפוש</span>
-                    </div>
-                    <p class="game-description">חיפוש מילים מהנה לפיתוח אוצר מילים</p>
-                    <button class="game-button" onclick="window.location.href='Findword.html'">שחק עכשיו</button>
-                </div>
-            </div>
-
-            <!-- פאזל הזזה -->
-            <div class="game-card">
-                <div class="game-icon bg-teal">🧩</div>
-                <div class="game-age">גיל: 6+</div>
-                <div class="game-content">
-                    <h2 class="game-title">פאזל הזזה</h2>
-                    <div class="game-tags">
-                        <span class="game-tag">חשיבה מרחבית</span>
-                        <span class="game-tag">תכנון</span>
-                    </div>
-                    <p class="game-description">פאזל הזזת אריחים לפיתוח חשיבה מרחבית</p>
-                    <button class="game-button" onclick="startGame('slidingPuzzle')">שחק עכשיו</button>
-                </div>
-            </div>
-
-            <!-- סדרות חשבוניות -->
-            <div class="game-card">
-                <div class="game-icon bg-pink">🔄</div>
-                <div class="game-age">גיל: 8+</div>
-                <div class="game-content">
-                    <h2 class="game-title">סדרות חשבוניות</h2>
-                    <div class="game-tags">
-                        <span class="game-tag">מתמטיקה</span>
-                        <span class="game-tag">דפוסים</span>
-                    </div>
-                    <p class="game-description">השלמת סדרות מספרים לפיתוח חשיבה מתמטית</p>
-                    <button class="game-button" onclick="startGame('numberSequence')">שחק עכשיו</button>
-                </div>
+                <p class="game-description">החליקו אריחים בלוח קטן עד שהתמונה תחזור לסדר — אפס שיעמום, מאה אחוז קליק.</p>
+                <button class="game-button" type="button" disabled>בקרוב</button>
             </div>
         </div>
+
+        <!-- 10: סדרות חשבוניות (בקרוב) -->
+        <div class="game-card soon" data-game="numberSequence" role="button" aria-disabled="true">
+            <div class="game-icon">
+                <div class="game-age">גיל 8+</div>
+                <span class="emoji">🔄</span>
+            </div>
+            <div class="game-content">
+                <h2 class="game-title">סדרות חשבוניות</h2>
+                <div class="game-tags">
+                    <span class="game-tag">מתמטיקה</span>
+                    <span class="game-tag">דפוסים</span>
+                </div>
+                <p class="game-description">2, 4, 8, 16, ואז... ? מצאו את החוקיות והשלימו את הסדרה.</p>
+                <button class="game-button" type="button" disabled>בקרוב</button>
+            </div>
+        </div>
+
     </div>
 
-    <script>
-        // מערך של המשחקים הזמינים והסטטוס שלהם
-        const games = {
-            tictactoe: {
-                name: 'איקס עיגול',
-                ready: true
-            },
-            connect4: {
-                name: '4 בשורה',
-                ready: true
-            },
-            sudoku: {
-                name: 'סודוקו',
-                ready: true
-            },
-            mathQuiz: {
-                name: 'חידון מתמטי',
-                ready: true
-            },
-            miniChess: {
-                name: 'שחמט קטן',
-                ready: false
-            },
-            hanoi: {
-                name: 'מגדלי האנוי',
-                ready: false
-            },
-            memory: {
-                name: 'משחק זיכרון',
-                ready: true
-            },
-            wordSearch: {
-                name: 'תפזורת מילים',
-                ready: false
-            },
-            slidingPuzzle: {
-                name: 'פאזל הזזה',
-                ready: false
-            },
-            numberSequence: {
-                name: 'סדרות חשבוניות',
-                ready: false
-            }
-        };
+    <footer class="footer">
+        <p>נבנה <span class="heart">♥</span> במיוחד לסקרנים הקטנים</p>
+    </footer>
+</div>
 
-        function startGame(gameType) {
-            if (!games[gameType].ready) {
-                alert('משחק זה בפיתוח! נא לנסות משחק אחר בינתיים.');
-                return;
-            }
-
-            // שמירת סוג המשחק הנבחר
-            localStorage.setItem('selectedGame', gameType);
-
-            // הפניה לדף המשחק המתאים
-            switch(gameType) {
-                case 'tictactoe':
-                case 'connect4':
-                case 'sudoku':
-                case 'memory':
-                    window.location.href = `game.html?type=${gameType}`;
-                    break;
-                case 'mathQuiz':
-                    window.location.href = 'math-quiz.html';
-                    break;
-                default:
-                    alert('משחק זה עדיין לא זמין. אנא נסו שוב בקרוב!');
-            }
-        }
-
-        // פונקציה להצגת אנימציה בעת העברת עכבר מעל כרטיס משחק
-        document.querySelectorAll('.game-card').forEach(card => {
-            card.addEventListener('mouseover', function() {
-                this.style.transform = 'translateY(-10px)';
-            });
-
-            card.addEventListener('mouseout', function() {
-                this.style.transform = 'translateY(0)';
-            });
+<script>
+    // קצת ידידותי יותר ממשתמש alert: רטט עדין על משחקים שלא זמינים
+    document.querySelectorAll('.game-card.soon').forEach(card => {
+        card.addEventListener('click', e => {
+            e.preventDefault();
+            card.animate(
+                [
+                    { transform: 'rotate(var(--rot,0deg)) translateX(0)' },
+                    { transform: 'rotate(var(--rot,0deg)) translateX(-6px)' },
+                    { transform: 'rotate(var(--rot,0deg)) translateX(6px)' },
+                    { transform: 'rotate(var(--rot,0deg)) translateX(-4px)' },
+                    { transform: 'rotate(var(--rot,0deg)) translateX(4px)' },
+                    { transform: 'rotate(var(--rot,0deg)) translateX(0)' }
+                ],
+                { duration: 420, easing: 'ease-in-out' }
+            );
         });
-    </script>
+    });
+</script>
 </body>
 </html>

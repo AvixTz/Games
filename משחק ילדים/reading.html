@@ -1,0 +1,1342 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1" />
+<title>מסע הסיפורים – משחק הבנת הנקרא</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Varela+Round&family=Rubik:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Varela Round', 'Rubik', Tahoma, Arial, sans-serif;
+    background:
+      radial-gradient(circle at 20% 10%, #ffe5b0 0%, transparent 40%),
+      radial-gradient(circle at 80% 20%, #b5e8ff 0%, transparent 40%),
+      radial-gradient(circle at 50% 80%, #d5ffd5 0%, transparent 50%),
+      linear-gradient(135deg, #fff5e6 0%, #e6f5ff 100%);
+    min-height: 100vh;
+    color: #2c2c54;
+    padding: 16px;
+    overflow-x: hidden;
+  }
+  .app {
+    max-width: 780px;
+    margin: 0 auto;
+    position: relative;
+  }
+  /* ================================ HEADER ================================ */
+  .header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 14px 18px;
+    background: rgba(255,255,255,0.75);
+    border-radius: 22px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 6px 18px rgba(100,100,200,0.12);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #6c5ce7;
+  }
+  .brand-icon { font-size: 1.8rem; }
+  .stars-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #fff1c7, #ffd84a);
+    padding: 8px 14px;
+    border-radius: 18px;
+    font-weight: 800;
+    color: #7a5b00;
+    border: 2px solid #ffc425;
+    font-size: 1.1rem;
+  }
+
+  /* ================================ MAP SCREEN ================================ */
+  .welcome {
+    text-align: center;
+    padding: 8px 10px 22px;
+  }
+  .welcome h1 {
+    font-size: 2rem;
+    color: #6c5ce7;
+    margin-bottom: 6px;
+    text-shadow: 2px 2px 0 #fff;
+  }
+  .welcome p {
+    color: #5a5a8a;
+    font-size: 1.1rem;
+  }
+  .heroes-row {
+    display: flex;
+    justify-content: center;
+    gap: 14px;
+    margin: 14px 0 8px;
+  }
+  .hero-chip {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 12px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 4px 10px rgba(150,150,200,0.2);
+    border: 2px solid #eef1ff;
+    font-size: .85rem;
+    color: #4a4aff;
+    min-width: 72px;
+  }
+  .hero-chip-emoji { font-size: 2rem; margin-bottom: 2px; }
+
+  .map {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-top: 16px;
+  }
+  .story-card {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+    background: #fff;
+    border: 3px solid #eef1ff;
+    border-radius: 22px;
+    padding: 16px;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+    text-align: right;
+    position: relative;
+    overflow: hidden;
+  }
+  .story-card:hover:not(.locked) {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 22px rgba(120,120,200,0.2);
+  }
+  .story-card.current {
+    border-color: #ff6b9d;
+    animation: gentle-pulse 2s ease-in-out infinite;
+  }
+  @keyframes gentle-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,157,0.5); }
+    50% { box-shadow: 0 0 0 14px rgba(255,107,157,0); }
+  }
+  .story-card.locked {
+    opacity: .55;
+    cursor: not-allowed;
+  }
+  .story-card.done {
+    background: linear-gradient(135deg, #e5fff0, #c7f2d8);
+    border-color: #4ecb7a;
+  }
+  .story-cover {
+    width: 90px;
+    height: 90px;
+    flex: 0 0 90px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.4rem;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, #ffe0f0, #ffc0dc);
+  }
+  .story-info h3 {
+    color: #2c2c54;
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+  }
+  .story-info p {
+    color: #7a7aaf;
+    font-size: .95rem;
+  }
+  .story-stars {
+    margin-top: 6px;
+    font-size: 1.05rem;
+    letter-spacing: 3px;
+    color: #ffb800;
+  }
+  .lock-icon { font-size: 1.4rem; opacity: .6; }
+  .go-hint {
+    position: absolute;
+    top: 50%;
+    left: 14px;
+    transform: translateY(-50%);
+    background: #ff6b9d;
+    color: #fff;
+    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    box-shadow: 0 3px 8px rgba(255,107,157,0.5);
+  }
+
+  /* ================================ STORY SCREEN ================================ */
+  .story-screen {
+    background: rgba(255,255,255,0.92);
+    border-radius: 28px;
+    box-shadow: 0 20px 50px rgba(100,100,200,0.25);
+    padding: 22px 18px;
+    min-height: calc(100vh - 90px);
+  }
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .home-btn {
+    background: #fff;
+    border: 2px solid #cfd4ff;
+    border-radius: 14px;
+    padding: 8px 12px;
+    font-family: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+    color: #4a4aff;
+    font-weight: 600;
+  }
+  .progress-wrap {
+    flex: 1;
+    height: 12px;
+    background: #e7ecff;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #46c99a, #ffc93c, #ff6b9d);
+    width: 0%;
+    transition: width .4s ease;
+  }
+  .phase-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    background: #f1f3ff;
+    border-radius: 14px;
+    color: #6c5ce7;
+    font-weight: 700;
+    font-size: .95rem;
+  }
+
+  .cover-box {
+    text-align: center;
+    padding: 30px 15px;
+    background: linear-gradient(135deg, #fff5e6, #ffe6cc);
+    border-radius: 22px;
+    border: 4px dashed #ffb347;
+    margin-bottom: 18px;
+  }
+  .cover-emoji {
+    font-size: 4rem;
+    letter-spacing: 6px;
+    margin-bottom: 10px;
+  }
+  .cover-title {
+    font-size: 1.7rem;
+    font-weight: 800;
+    color: #7a3a00;
+  }
+
+  .prompt {
+    text-align: center;
+    font-size: 1.25rem;
+    color: #4a4aff;
+    font-weight: 700;
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+  .tts-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: #e8f1ff;
+    border: 2px solid #a8c4ff;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: .95rem;
+    cursor: pointer;
+    color: #3b5bdb;
+    font-weight: 600;
+    margin-inline-start: 8px;
+  }
+  .tts-btn:hover { background: #d5e3ff; }
+
+  .options-list {
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 1fr;
+    margin-bottom: 18px;
+  }
+  .opt-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: #fff;
+    border: 4px solid #cfd4ff;
+    border-radius: 18px;
+    padding: 16px;
+    font-family: inherit;
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: #2c2c54;
+    cursor: pointer;
+    text-align: right;
+    transition: .15s;
+    min-height: 70px;
+  }
+  .opt-card:hover { background: #f4f6ff; transform: translateY(-2px); }
+  .opt-card .opt-emoji { font-size: 2rem; flex: 0 0 auto; }
+  .opt-card.correct {
+    background: linear-gradient(135deg,#c7f7d9,#8de9c6);
+    border-color: #2ea27b;
+    color: #1a5d40;
+  }
+  .opt-card.wrong {
+    background: linear-gradient(135deg,#ffd0d0,#ff9d9d);
+    border-color: #c03030;
+    color: #7a1010;
+    animation: shake .4s ease;
+  }
+  .opt-card.dim { opacity: .45; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-8px); }
+    75% { transform: translateX(8px); }
+  }
+
+  /* Visualization grid of 4 scenes */
+  .scenes-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .scene-card {
+    aspect-ratio: 1 / 1;
+    background: linear-gradient(135deg, #e0f5ff, #b5e8ff);
+    border: 4px solid #cfe9ff;
+    border-radius: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.6rem;
+    letter-spacing: 4px;
+    transition: .15s;
+    text-align: center;
+  }
+  .scene-card:hover { transform: scale(1.03); }
+  .scene-card.correct {
+    background: linear-gradient(135deg,#c7f7d9,#8de9c6);
+    border-color: #2ea27b;
+  }
+  .scene-card.wrong {
+    background: linear-gradient(135deg,#ffd0d0,#ff9d9d);
+    border-color: #c03030;
+    animation: shake .4s ease;
+  }
+  .scene-card.dim { opacity: .35; }
+
+  /* Reading phase */
+  .reader {
+    background: #fffef6;
+    border: 3px solid #ffe4a3;
+    border-radius: 22px;
+    padding: 22px 18px;
+    margin-bottom: 16px;
+    line-height: 2;
+    font-size: 1.25rem;
+    color: #2c2c54;
+  }
+  .reader .sentence {
+    display: block;
+    padding: 6px 4px;
+    border-radius: 10px;
+    transition: background .2s;
+    cursor: pointer;
+    margin-bottom: 4px;
+  }
+  .reader .sentence:hover { background: #fff3d0; }
+  .reader .sentence.speaking { background: #ffecb0; }
+  .reader .sentence.clue { background: #d5ffe4; font-weight: 700; border: 2px dashed #4ecb7a; }
+  .reader .sentence.clue-active { background: #b5f0cf; }
+  .reader .word {
+    cursor: pointer;
+  }
+  .reader .word:hover { color: #6c5ce7; text-decoration: underline wavy; }
+  .reader .word.clue-word { background: #fff2b0; padding: 2px 5px; border-radius: 6px; }
+  .reader .word.clue-word.selected { background: #ffe066; border-bottom: 3px solid #ff9800; }
+
+  .bubble {
+    background: #e8f1ff;
+    border: 2px solid #a8c4ff;
+    border-radius: 16px;
+    padding: 12px 16px;
+    color: #2c3e50;
+    font-size: 1rem;
+    margin-bottom: 14px;
+    line-height: 1.6;
+  }
+  .bubble.hero {
+    background: linear-gradient(135deg, #fff1c7, #ffd84a);
+    border-color: #ffc425;
+    color: #7a5b00;
+  }
+  .bubble-emoji { font-size: 1.4rem; margin-inline-end: 6px; }
+
+  /* Buttons */
+  .btn-primary {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    font-family: inherit;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #fff;
+    background: linear-gradient(135deg, #ff6b9d, #ff4585);
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #c03068, 0 8px 16px rgba(255,69,133,0.3);
+    transition: transform .1s, box-shadow .1s;
+    margin-top: 8px;
+  }
+  .btn-primary:active { transform: translateY(4px); box-shadow: 0 2px 0 #c03068; }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-secondary {
+    padding: 12px 18px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #6c5ce7;
+    background: #fff;
+    border: 3px solid #cfd4ff;
+    border-radius: 16px;
+    cursor: pointer;
+  }
+  .btn-secondary:hover { background: #f4f6ff; }
+  .btn-hint {
+    padding: 8px 14px;
+    font-family: inherit;
+    font-weight: 700;
+    color: #7a5b00;
+    background: linear-gradient(135deg, #fff1c7, #ffd84a);
+    border: 2px solid #ffc425;
+    border-radius: 14px;
+    cursor: pointer;
+    font-size: .95rem;
+  }
+
+  .actions-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 10px;
+  }
+  .actions-row .btn-primary { flex: 1; }
+
+  /* Done screen */
+  .done-box {
+    text-align: center;
+    padding: 30px 20px;
+  }
+  .done-emoji {
+    font-size: 5rem;
+    margin-bottom: 10px;
+    animation: bounce 1s infinite;
+  }
+  @keyframes bounce {
+    0%,100% { transform: translateY(0) rotate(-4deg); }
+    50% { transform: translateY(-14px) rotate(4deg); }
+  }
+  .done-stars {
+    font-size: 3rem;
+    letter-spacing: 8px;
+    color: #ffb800;
+    margin: 14px 0;
+  }
+  .done-msg {
+    font-size: 1.3rem;
+    color: #6c5ce7;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .done-sub {
+    color: #7a7aaf;
+    margin-bottom: 18px;
+  }
+  .end-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  /* Confetti */
+  .confetti {
+    position: fixed;
+    top: -20px;
+    font-size: 1.6rem;
+    pointer-events: none;
+    animation: fall 2.5s linear forwards;
+    z-index: 1000;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(720deg); }
+  }
+
+  /* Hidden utility */
+  .hidden { display: none !important; }
+
+  /* Numbers kept LTR even inside Hebrew flow */
+  .num { unicode-bidi: isolate; direction: ltr; display: inline-block; }
+
+  @media (max-width: 420px) {
+    body { padding: 10px; }
+    .app { font-size: .98rem; }
+    .cover-title { font-size: 1.4rem; }
+    .scene-card { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ================================ HOME ================================ -->
+  <section id="screen-home">
+    <div class="header-bar">
+      <div class="brand"><span class="brand-icon">🗺️</span><span>מסע הסיפורים</span></div>
+      <div class="stars-badge"><span>⭐</span> <span class="num" id="total-stars">0</span></div>
+    </div>
+
+    <div class="welcome">
+      <h1>שלום חבר! 👋</h1>
+      <p>מועדון חוקרי הסיפורים מחכה לך!</p>
+      <div class="heroes-row">
+        <div class="hero-chip"><div class="hero-chip-emoji">🧭</div><div>מאיה</div></div>
+        <div class="hero-chip"><div class="hero-chip-emoji">🔍</div><div>אורי</div></div>
+        <div class="hero-chip"><div class="hero-chip-emoji">🎨</div><div>שירה</div></div>
+        <div class="hero-chip"><div class="hero-chip-emoji">📚</div><div>יונתן</div></div>
+      </div>
+    </div>
+
+    <div class="map" id="map"></div>
+
+    <div style="text-align:center; margin-top:20px">
+      <button class="btn-secondary" id="reset-btn" style="font-size:.85rem; opacity:.7">התחלה מחדש 🔄</button>
+    </div>
+  </section>
+
+  <!-- ================================ STORY ================================ -->
+  <section id="screen-story" class="hidden">
+    <div class="story-screen">
+      <div class="topbar">
+        <button class="home-btn" id="back-home-btn">🏠 למפה</button>
+        <div class="progress-wrap"><div class="progress-bar" id="progress-bar"></div></div>
+        <div class="phase-title" id="phase-title">📖</div>
+      </div>
+      <div id="phase-container"></div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ============================================================
+   נתוני הסיפורים – 5 סיפורים קצרים רמה 1 לכיתה ד׳
+   ============================================================ */
+const STORIES = [
+  {
+    id: 1,
+    title: 'הכלב של דני',
+    subtitle: 'סיפור על חבר מיוחד',
+    cover: '🌳👦🐕',
+    hero: { name: 'אורי', emoji: '🔍' },
+    text: [
+      'לדני יש כלב קטן בשם בובי.',
+      'בובי אוהב לשחק בפארק.',
+      'יום אחד בובי ברח אחרי חתול.',
+      'דני בכה כי לא מצא אותו בשום מקום.',
+      'אחרי שעה בובי חזר לבד, עם כדור חדש בפה!'
+    ],
+    predict: {
+      q: 'מה נראה לך יקרה בסיפור?',
+      options: [
+        { t: 'דני יאבד את הכלב', emoji: '😢' },
+        { t: 'יקרה משהו מפתיע', emoji: '🤔' },
+        { t: 'דני יהיה שמח בסוף', emoji: '😊' },
+      ]
+    },
+    games: [
+      {
+        type: 'visualization',
+        q: 'איזו תמונה מתאימה למשפט הזה?',
+        sentenceIdx: 1,
+        options: [
+          { scene: '🏠🛏️😴', correct: false },
+          { scene: '🌳🐕⚽🌳', correct: true },
+          { scene: '🏫📚👦', correct: false },
+          { scene: '🌊🐟🐠', correct: false },
+        ]
+      },
+      {
+        type: 'inference',
+        q: 'למה דני בכה?',
+        clueSentenceIdx: 2,
+        options: [
+          { t: 'כי הוא היה רעב', correct: false },
+          { t: 'כי הכלב שלו אבד', correct: true },
+          { t: 'כי נפל בפארק', correct: false },
+        ]
+      },
+      {
+        type: 'mainIdea',
+        q: 'איזו כותרת הכי מתאימה לסיפור?',
+        options: [
+          { t: 'יום בפארק', correct: false },
+          { t: 'בובי אבד ואז חזר', correct: true },
+          { t: 'דני קיבל כלב חדש', correct: false },
+          { t: 'המסע לחתול', correct: false },
+        ]
+      }
+    ]
+  },
+  {
+    id: 2,
+    title: 'העוגיות של סבתא',
+    subtitle: 'תעלומה מתוקה במטבח',
+    cover: '👵🍪🤔',
+    hero: { name: 'אורי', emoji: '🔍' },
+    text: [
+      'סבתא של מאיה אפתה עוגיות שוקולד טעימות.',
+      'הריח הנפלא עלה מהמטבח לכל הבית.',
+      'מאיה נכנסה למטבח ומצאה את הצלחת ריקה.',
+      '״מי אכל את כל העוגיות?״ שאלה מופתעת.',
+      'אחיה הקטן חייך, ועל הפנים שלו היה שוקולד חום!'
+    ],
+    predict: {
+      q: 'מה נראה לך הסיפור ילמד אותנו?',
+      options: [
+        { t: 'מישהו גנב את העוגיות', emoji: '🕵️' },
+        { t: 'לסבתא יש סוד', emoji: '🤫' },
+        { t: 'כולם יאכלו יחד', emoji: '👨‍👩‍👧' },
+      ]
+    },
+    games: [
+      {
+        type: 'visualization',
+        q: 'איזו תמונה מתאימה למשפט האחרון?',
+        sentenceIdx: 4,
+        options: [
+          { scene: '👶🍫😋', correct: true },
+          { scene: '👧📖🛏️', correct: false },
+          { scene: '🐕🦴🌳', correct: false },
+          { scene: '🚗🏎️💨', correct: false },
+        ]
+      },
+      {
+        type: 'inference',
+        q: 'מי אכל את העוגיות?',
+        clueSentenceIdx: 4,
+        options: [
+          { t: 'סבתא', correct: false },
+          { t: 'מאיה', correct: false },
+          { t: 'האח הקטן', correct: true },
+        ]
+      },
+      {
+        type: 'mainIdea',
+        q: 'מה הרעיון המרכזי של הסיפור?',
+        options: [
+          { t: 'סבתא לא אופה טוב', correct: false },
+          { t: 'פיצחו תעלומה קטנה בבית', correct: true },
+          { t: 'מאיה אוהבת עוגיות', correct: false },
+          { t: 'האח לא רעב', correct: false },
+        ]
+      }
+    ]
+  },
+  {
+    id: 3,
+    title: 'האופניים של אורי',
+    subtitle: 'סיפור על לא לוותר',
+    cover: '👦🚴🎂',
+    hero: { name: 'מאיה', emoji: '🧭' },
+    text: [
+      'אורי קיבל אופניים חדשים במתנה ליום ההולדת.',
+      'הוא רצה לרכוב מיד, אבל לא ידע איך.',
+      'אבא לימד אותו איך לאזן את הגוף על האופניים.',
+      'אורי נפל שלוש פעמים, אבל לא ויתר ונסה שוב.',
+      'עכשיו הוא רוכב לבד כל יום אחרי בית הספר לפארק.'
+    ],
+    predict: {
+      q: 'מה תגלה בסיפור?',
+      options: [
+        { t: 'אורי יצליח עם הזמן', emoji: '💪' },
+        { t: 'אבא ירכב במקומו', emoji: '👨' },
+        { t: 'האופניים יישברו', emoji: '⚠️' },
+      ]
+    },
+    games: [
+      {
+        type: 'visualization',
+        q: 'איזו תמונה מתארת את תחילת הסיפור?',
+        sentenceIdx: 0,
+        options: [
+          { scene: '🎂🎁🚴', correct: true },
+          { scene: '🏫✏️📒', correct: false },
+          { scene: '🌊🏖️☀️', correct: false },
+          { scene: '🐕🦴🌳', correct: false },
+        ]
+      },
+      {
+        type: 'inference',
+        q: 'מה אפשר ללמוד מאורי?',
+        clueSentenceIdx: 3,
+        options: [
+          { t: 'כשקשה – נסים עוד', correct: true },
+          { t: 'אי אפשר ללמוד אופניים', correct: false },
+          { t: 'עדיף שאבא ירכב', correct: false },
+        ]
+      },
+      {
+        type: 'mainIdea',
+        q: 'איזו כותרת הכי מתאימה?',
+        options: [
+          { t: 'אורי חוגג יום הולדת', correct: false },
+          { t: 'לומדים לרכב וצוחקים', correct: false },
+          { t: 'אורי לומד לרכב – לא מוותר ומצליח', correct: true },
+          { t: 'מסיבה בפארק', correct: false },
+        ]
+      }
+    ]
+  },
+  {
+    id: 4,
+    title: 'הציור של שירה',
+    subtitle: 'סיפור על גאווה',
+    cover: '👧🎨🖼️',
+    hero: { name: 'שירה', emoji: '🎨' },
+    text: [
+      'שירה אהבה מאוד לצייר.',
+      'היא ציירה ציור של יער קסום עם הרבה חיות.',
+      'המורה ראתה את הציור, התלהבה ותלתה אותו על הקיר של הכיתה.',
+      'כל הילדים עצרו להסתכל ואמרו ״וואו!״',
+      'שירה הרגישה פתאום גאה מאוד בעצמה.'
+    ],
+    predict: {
+      q: 'איך תרגיש שירה בסוף?',
+      options: [
+        { t: 'שמחה וגאה', emoji: '😊' },
+        { t: 'מופתעת', emoji: '😮' },
+        { t: 'עצובה', emoji: '😢' },
+      ]
+    },
+    games: [
+      {
+        type: 'visualization',
+        q: 'איזו תמונה מתאימה למשפט השני?',
+        sentenceIdx: 1,
+        options: [
+          { scene: '🌲🦊🦉🌲', correct: true },
+          { scene: '🏫📚✏️', correct: false },
+          { scene: '🍕🥤🎉', correct: false },
+          { scene: '🏠🛋️📺', correct: false },
+        ]
+      },
+      {
+        type: 'inference',
+        q: 'למה שירה הרגישה גאה?',
+        clueSentenceIdx: 3,
+        options: [
+          { t: 'כי קיבלה סוכריה', correct: false },
+          { t: 'כי כולם אהבו את הציור שלה', correct: true },
+          { t: 'כי יצאה הביתה מוקדם', correct: false },
+        ]
+      },
+      {
+        type: 'mainIdea',
+        q: 'על מה הסיפור בעיקר?',
+        options: [
+          { t: 'הזמן שלוקח לצייר', correct: false },
+          { t: 'הרגע שבו אתה גאה במה שעשית', correct: true },
+          { t: 'איזה מורה יש בכיתה', correct: false },
+          { t: 'חיות ביער', correct: false },
+        ]
+      }
+    ]
+  },
+  {
+    id: 5,
+    title: 'הכוכב של יונתן',
+    subtitle: 'סיפור על חלום גדול',
+    cover: '🌙✨🔭',
+    hero: { name: 'יונתן', emoji: '📚' },
+    text: [
+      'יונתן אהב מאוד להסתכל על השמיים בלילה.',
+      'לילה אחד הוא ראה אור קטן שזז לאט בין הכוכבים.',
+      '״זה לא כוכב!״ הסביר לו אבא, ״זה לוויין שחג מסביב לכדור הארץ״.',
+      'יונתן שאל המון שאלות על החלל ועל הירח.',
+      'אז הוא החליט שכשיגדל הוא יהיה אסטרונאוט.'
+    ],
+    predict: {
+      q: 'מה יונתן יחליט בסוף הסיפור?',
+      options: [
+        { t: 'רוצה לטוס לחלל', emoji: '🚀' },
+        { t: 'לעשות מחקר על כוכבים', emoji: '🔭' },
+        { t: 'משהו מפתיע', emoji: '✨' },
+      ]
+    },
+    games: [
+      {
+        type: 'visualization',
+        q: 'איזו תמונה מתארת את מה שיונתן ראה?',
+        sentenceIdx: 1,
+        options: [
+          { scene: '🌙🛰️✨', correct: true },
+          { scene: '☀️🏖️🌊', correct: false },
+          { scene: '🌳🐿️🍂', correct: false },
+          { scene: '🚗🛣️🏙️', correct: false },
+        ]
+      },
+      {
+        type: 'inference',
+        q: 'למה אבא הסביר שזה לא כוכב?',
+        clueSentenceIdx: 2,
+        options: [
+          { t: 'כי אין כוכבים בשמיים', correct: false },
+          { t: 'כי הוא ראה שזה לוויין זז', correct: true },
+          { t: 'כי יונתן המציא', correct: false },
+        ]
+      },
+      {
+        type: 'mainIdea',
+        q: 'מה החלום של יונתן?',
+        options: [
+          { t: 'לקנות טלסקופ', correct: false },
+          { t: 'לגור על הירח', correct: false },
+          { t: 'להיות אסטרונאוט כשיגדל', correct: true },
+          { t: 'לראות עוד לוויינים', correct: false },
+        ]
+      }
+    ]
+  }
+];
+
+/* ============================================================
+   שמירה / טעינה של התקדמות
+   ============================================================ */
+const STORAGE_KEY = 'reading_journey_v1';
+function loadProgress() {
+  try {
+    const p = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    return { stars: p.stars || {}, ...p };
+  } catch(e) { return { stars: {} }; }
+}
+function saveProgress(p) { localStorage.setItem(STORAGE_KEY, JSON.stringify(p)); }
+function totalStars(p) {
+  return Object.values(p.stars || {}).reduce((a, b) => a + b, 0);
+}
+
+let state = {
+  screen: 'home',
+  storyIdx: 0,
+  phaseIdx: 0, // 0=predict, 1..N=games, N+1=done
+  mistakes: 0,
+  locked: false,
+  progress: loadProgress(),
+};
+
+/* ============================================================
+   Text-to-Speech בעברית
+   ============================================================ */
+let currentUtterance = null;
+function speak(text, onEnd) {
+  try {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'he-IL';
+    u.rate = 0.9;
+    u.pitch = 1.05;
+    currentUtterance = u;
+    if (onEnd) u.onend = onEnd;
+    window.speechSynthesis.speak(u);
+  } catch(e) {}
+}
+function stopSpeak() {
+  try { window.speechSynthesis.cancel(); } catch(e) {}
+}
+
+/* ============================================================
+   אפקטים קוליים קצרים
+   ============================================================ */
+let audioCtx = null;
+function beep(freq, dur = 0.15, type = 'sine', vol = 0.15) {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.value = freq;
+    g.gain.setValueAtTime(0.001, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(vol, audioCtx.currentTime + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    osc.connect(g); g.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + dur);
+  } catch(e) {}
+}
+function soundSuccess() { beep(660, 0.12); setTimeout(() => beep(880, 0.16), 100); }
+function soundWrong()   { beep(260, 0.18, 'square', 0.12); }
+function soundWin()     {
+  [523, 659, 784, 1046, 1319].forEach((f, i) => setTimeout(() => beep(f, 0.17), i * 110));
+}
+
+/* ============================================================
+   אפקטים ויזואליים — קונפטי
+   ============================================================ */
+function confetti(count = 30) {
+  const emojis = ['⭐','🎉','✨','🎊','💖','🌟','🥳'];
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.animationDuration = (2 + Math.random() * 2) + 's';
+    el.style.animationDelay = (Math.random() * 0.5) + 's';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 4500);
+  }
+}
+
+/* ============================================================
+   תצוגת מפת הסיפורים (בית)
+   ============================================================ */
+function renderHome() {
+  document.getElementById('screen-home').classList.remove('hidden');
+  document.getElementById('screen-story').classList.add('hidden');
+  document.getElementById('total-stars').textContent = totalStars(state.progress);
+
+  const map = document.getElementById('map');
+  map.innerHTML = '';
+  STORIES.forEach((s, i) => {
+    const earned = state.progress.stars[s.id] || 0;
+    const prev = i === 0 ? true : (state.progress.stars[STORIES[i-1].id] || 0) >= 1;
+    const done = earned >= 1;
+    const current = prev && !done;
+    const locked = !prev;
+    const stars = earned > 0
+      ? '⭐'.repeat(earned) + '☆'.repeat(3 - earned)
+      : (locked ? '' : '☆☆☆');
+
+    const card = document.createElement('div');
+    card.className = 'story-card' + (current ? ' current' : '') + (done ? ' done' : '') + (locked ? ' locked' : '');
+    card.innerHTML = `
+      <div class="story-cover">${s.cover}</div>
+      <div class="story-info" style="flex:1">
+        <h3>${i + 1}. ${s.title}</h3>
+        <p>${s.subtitle}</p>
+        <div class="story-stars">${stars}</div>
+      </div>
+      ${locked ? '<div class="lock-icon">🔒</div>' : (current ? '<div class="go-hint">▶</div>' : '')}
+    `;
+    if (!locked) {
+      card.addEventListener('click', () => openStory(i));
+    }
+    map.appendChild(card);
+  });
+}
+
+/* ============================================================
+   פתיחת סיפור
+   ============================================================ */
+function openStory(idx) {
+  state.storyIdx = idx;
+  state.phaseIdx = 0;
+  state.mistakes = 0;
+  state.locked = false;
+  document.getElementById('screen-home').classList.add('hidden');
+  document.getElementById('screen-story').classList.remove('hidden');
+  renderPhase();
+}
+
+function backHome() {
+  stopSpeak();
+  state.screen = 'home';
+  renderHome();
+}
+
+/* ============================================================
+   תצוגת הפאזה הנוכחית
+   ============================================================ */
+function renderPhase() {
+  stopSpeak();
+  state.locked = false;
+  const story = STORIES[state.storyIdx];
+  const totalPhases = 2 + story.games.length; // predict + read + games
+  const progress = (state.phaseIdx / totalPhases) * 100;
+  document.getElementById('progress-bar').style.width = progress + '%';
+
+  const container = document.getElementById('phase-container');
+  container.innerHTML = '';
+
+  if (state.phaseIdx === 0)              renderPredict(story, container);
+  else if (state.phaseIdx === 1)         renderRead(story, container);
+  else if (state.phaseIdx - 2 < story.games.length) renderGame(story, container);
+  else                                   renderDone(story, container);
+}
+
+/* ============================================================
+   שלב 0: חיזוי מהכריכה
+   ============================================================ */
+function renderPredict(story, c) {
+  document.getElementById('phase-title').innerHTML = '🔮 <b>חזאי</b>';
+  c.innerHTML = `
+    <div class="cover-box">
+      <div class="cover-emoji">${story.cover}</div>
+      <div class="cover-title">${story.title}</div>
+    </div>
+    <div class="bubble hero">
+      <span class="bubble-emoji">${story.hero.emoji}</span>
+      <b>${story.hero.name}</b> שואל:
+      <br>${story.predict.q}
+      <button class="tts-btn" onclick="speak('${story.predict.q.replace(/'/g,"\\'")}')">🔊</button>
+    </div>
+    <div class="options-list" id="pred-opts"></div>
+  `;
+  const opts = c.querySelector('#pred-opts');
+  story.predict.options.forEach((o, i) => {
+    const el = document.createElement('button');
+    el.className = 'opt-card';
+    el.innerHTML = `<div class="opt-emoji">${o.emoji}</div><div>${o.t}</div>`;
+    el.addEventListener('click', () => {
+      if (state.locked) return;
+      state.locked = true;
+      el.classList.add('correct');
+      soundSuccess();
+      setTimeout(() => {
+        state.phaseIdx = 1;
+        renderPhase();
+      }, 800);
+    });
+    opts.appendChild(el);
+  });
+
+  // auto-speak prediction prompt on first open
+  setTimeout(() => speak(story.predict.q), 400);
+}
+
+/* ============================================================
+   שלב 1: קריאה
+   ============================================================ */
+function renderRead(story, c) {
+  document.getElementById('phase-title').innerHTML = '📖 <b>קוראים</b>';
+  c.innerHTML = `
+    <div class="prompt">
+      ${story.title}
+      <button class="tts-btn" id="read-all-btn">🔊 הקראה</button>
+    </div>
+    <div class="reader" id="reader"></div>
+    <button class="btn-primary" id="done-read">קראתי! בוא נמשיך ✨</button>
+  `;
+  const reader = c.querySelector('#reader');
+  story.text.forEach((sentence, i) => {
+    const s = document.createElement('span');
+    s.className = 'sentence';
+    s.dataset.idx = i;
+    s.textContent = sentence;
+    s.addEventListener('click', () => {
+      document.querySelectorAll('.sentence').forEach(x => x.classList.remove('speaking'));
+      s.classList.add('speaking');
+      speak(sentence, () => s.classList.remove('speaking'));
+    });
+    reader.appendChild(s);
+  });
+
+  c.querySelector('#read-all-btn').addEventListener('click', async () => {
+    stopSpeak();
+    const sentences = c.querySelectorAll('.sentence');
+    let i = 0;
+    const next = () => {
+      sentences.forEach(x => x.classList.remove('speaking'));
+      if (i >= sentences.length) return;
+      sentences[i].classList.add('speaking');
+      speak(story.text[i], () => {
+        sentences[i].classList.remove('speaking');
+        i++;
+        if (i < sentences.length) setTimeout(next, 250);
+      });
+    };
+    next();
+  });
+
+  c.querySelector('#done-read').addEventListener('click', () => {
+    stopSpeak();
+    state.phaseIdx = 2;
+    renderPhase();
+  });
+}
+
+/* ============================================================
+   שלבי משחק
+   ============================================================ */
+function renderGame(story, c) {
+  const g = story.games[state.phaseIdx - 2];
+  if (g.type === 'visualization') return renderVisualization(story, g, c);
+  if (g.type === 'inference')     return renderInference(story, g, c);
+  if (g.type === 'mainIdea')      return renderMainIdea(story, g, c);
+}
+
+/* ============ visualization ============ */
+function renderVisualization(story, g, c) {
+  document.getElementById('phase-title').innerHTML = '🎬 <b>סרט בראש</b>';
+  const sentence = story.text[g.sentenceIdx];
+  c.innerHTML = `
+    <div class="bubble hero">
+      <span class="bubble-emoji">🎬</span>
+      <b>${g.q}</b>
+    </div>
+    <div class="reader" style="font-size:1.15rem">
+      <span class="sentence clue">${sentence}<button class="tts-btn" onclick="speak('${sentence.replace(/'/g,"\\'")}')">🔊</button></span>
+    </div>
+    <div class="scenes-grid" id="scenes"></div>
+    <button class="btn-hint" id="hint-btn" style="display:block; margin:0 auto">🎈 רמז</button>
+  `;
+  const grid = c.querySelector('#scenes');
+  const shuffled = shuffle(g.options.map((o, i) => ({ ...o, origIdx: i })));
+  shuffled.forEach(opt => {
+    const el = document.createElement('div');
+    el.className = 'scene-card';
+    el.textContent = opt.scene;
+    el.addEventListener('click', () => handleChoice(el, opt.correct, story, grid.querySelectorAll('.scene-card')));
+    grid.appendChild(el);
+  });
+  c.querySelector('#hint-btn').addEventListener('click', () => {
+    const cards = grid.querySelectorAll('.scene-card');
+    // dim 2 wrong
+    let dimmed = 0;
+    shuffled.forEach((opt, i) => {
+      if (!opt.correct && dimmed < 2 && !cards[i].classList.contains('dim')) {
+        cards[i].classList.add('dim');
+        dimmed++;
+      }
+    });
+  });
+  setTimeout(() => speak(g.q), 400);
+}
+
+/* ============ inference ============ */
+function renderInference(story, g, c) {
+  document.getElementById('phase-title').innerHTML = '🔍 <b>הבלש</b>';
+  c.innerHTML = `
+    <div class="bubble hero">
+      <span class="bubble-emoji">🔍</span>
+      <b>אורי:</b> ${g.q}
+      <button class="tts-btn" onclick="speak('${g.q.replace(/'/g,"\\'")}')">🔊</button>
+    </div>
+    <div class="bubble">
+      💡 לחצו על המשפט שעוזר לכם להבין את התשובה, ואז בחרו תשובה למטה.
+    </div>
+    <div class="reader" id="inf-reader"></div>
+    <div class="options-list" id="inf-opts"></div>
+    <button class="btn-hint" id="hint-btn" style="display:block; margin:0 auto">🎈 רמז</button>
+  `;
+  const reader = c.querySelector('#inf-reader');
+  let clueSelected = false;
+  story.text.forEach((sentence, i) => {
+    const s = document.createElement('span');
+    s.className = 'sentence';
+    s.textContent = sentence;
+    s.addEventListener('click', () => {
+      document.querySelectorAll('#inf-reader .sentence').forEach(x => x.classList.remove('speaking'));
+      s.classList.add('speaking');
+      speak(sentence, () => s.classList.remove('speaking'));
+      if (i === g.clueSentenceIdx) {
+        s.classList.add('clue-active');
+        clueSelected = true;
+      }
+    });
+    reader.appendChild(s);
+  });
+
+  const opts = c.querySelector('#inf-opts');
+  const shuffled = shuffle(g.options.map((o, i) => ({ ...o, origIdx: i })));
+  shuffled.forEach(opt => {
+    const el = document.createElement('button');
+    el.className = 'opt-card';
+    el.innerHTML = `<div>${opt.t}</div>`;
+    el.addEventListener('click', () => handleChoice(el, opt.correct, story, opts.querySelectorAll('.opt-card')));
+    opts.appendChild(el);
+  });
+
+  c.querySelector('#hint-btn').addEventListener('click', () => {
+    // highlight the clue sentence
+    const sentences = reader.querySelectorAll('.sentence');
+    sentences[g.clueSentenceIdx].classList.add('clue');
+    speak('הרמז כאן: ' + story.text[g.clueSentenceIdx]);
+  });
+  setTimeout(() => speak(g.q), 400);
+}
+
+/* ============ main idea ============ */
+function renderMainIdea(story, g, c) {
+  document.getElementById('phase-title').innerHTML = '💭 <b>רעיון מרכזי</b>';
+  c.innerHTML = `
+    <div class="bubble hero">
+      <span class="bubble-emoji">📚</span>
+      <b>יונתן:</b> ${g.q}
+      <button class="tts-btn" onclick="speak('${g.q.replace(/'/g,"\\'")}')">🔊</button>
+    </div>
+    <div class="bubble">
+      💡 תחשבו על *כל* הסיפור, לא רק על חלק אחד.
+    </div>
+    <div class="options-list" id="mi-opts"></div>
+    <button class="btn-hint" id="hint-btn" style="display:block; margin:0 auto">🎈 רמז</button>
+  `;
+  const opts = c.querySelector('#mi-opts');
+  const shuffled = shuffle(g.options.map((o, i) => ({ ...o, origIdx: i })));
+  shuffled.forEach(opt => {
+    const el = document.createElement('button');
+    el.className = 'opt-card';
+    el.innerHTML = `<div>${opt.t}</div>`;
+    el.addEventListener('click', () => handleChoice(el, opt.correct, story, opts.querySelectorAll('.opt-card')));
+    opts.appendChild(el);
+  });
+  c.querySelector('#hint-btn').addEventListener('click', () => {
+    // dim 2 wrongs
+    let dimmed = 0;
+    shuffled.forEach((opt, i) => {
+      if (!opt.correct && dimmed < 2 && !opts.children[i].classList.contains('dim')) {
+        opts.children[i].classList.add('dim');
+        dimmed++;
+      }
+    });
+  });
+  setTimeout(() => speak(g.q), 400);
+}
+
+/* ============================================================
+   טיפול בתשובה
+   ============================================================ */
+function handleChoice(el, isCorrect, story, allEls) {
+  if (state.locked) return;
+  if (isCorrect) {
+    state.locked = true;
+    el.classList.add('correct');
+    soundSuccess();
+    // dim others
+    allEls.forEach(x => { if (x !== el) x.classList.add('dim'); });
+    setTimeout(() => {
+      state.phaseIdx++;
+      renderPhase();
+    }, 900);
+  } else {
+    el.classList.add('wrong');
+    state.mistakes++;
+    soundWrong();
+    setTimeout(() => {
+      el.classList.remove('wrong');
+      el.classList.add('dim');
+      el.style.pointerEvents = 'none';
+    }, 600);
+  }
+}
+
+/* ============================================================
+   סיום סיפור
+   ============================================================ */
+function renderDone(story, c) {
+  document.getElementById('phase-title').innerHTML = '🏁 <b>כל הכבוד!</b>';
+  document.getElementById('progress-bar').style.width = '100%';
+
+  // stars based on mistakes (max 3)
+  const mistakes = state.mistakes;
+  const stars = mistakes === 0 ? 3 : (mistakes <= 2 ? 2 : 1);
+  const prev = state.progress.stars[story.id] || 0;
+  if (stars > prev) {
+    state.progress.stars[story.id] = stars;
+    saveProgress(state.progress);
+  }
+
+  const msg = stars === 3 ? 'מושלם! קרא/ת, חשב/ת, הבנ/ת את הכל 🌟' :
+              stars === 2 ? 'כל הכבוד! עבדת מצוין!' :
+                            'סיימת! כל התחלה דורשת אומץ 💪';
+
+  c.innerHTML = `
+    <div class="done-box">
+      <div class="done-emoji">${stars === 3 ? '🏆' : stars === 2 ? '🌟' : '💪'}</div>
+      <div class="done-stars">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
+      <div class="done-msg">${msg}</div>
+      <div class="done-sub">סיימת את "${story.title}"</div>
+      <div class="end-actions">
+        <button class="btn-secondary" id="again-btn">עוד פעם 🔁</button>
+        <button class="btn-primary" style="flex:1 1 180px" id="next-btn">
+          ${state.storyIdx < STORIES.length - 1 ? 'לסיפור הבא ➡️' : 'בחזרה למפה 🗺️'}
+        </button>
+      </div>
+    </div>
+  `;
+  soundWin();
+  confetti(stars === 3 ? 40 : 20);
+
+  c.querySelector('#again-btn').addEventListener('click', () => openStory(state.storyIdx));
+  c.querySelector('#next-btn').addEventListener('click', () => {
+    if (state.storyIdx < STORIES.length - 1) openStory(state.storyIdx + 1);
+    else backHome();
+  });
+}
+
+/* ============================================================
+   כלי עזר
+   ============================================================ */
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ============================================================
+   אתחול
+   ============================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+  renderHome();
+
+  document.getElementById('back-home-btn').addEventListener('click', backHome);
+  document.getElementById('reset-btn').addEventListener('click', () => {
+    if (confirm('בטוח שרוצים להתחיל מההתחלה? כל הכוכבים יימחקו.')) {
+      state.progress = { stars: {} };
+      saveProgress(state.progress);
+      renderHome();
+    }
+  });
+
+  // Unlock AudioContext on first interaction
+  document.body.addEventListener('click', () => {
+    try { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+    // Some browsers need this nudge to initialize voices list
+    try { window.speechSynthesis && window.speechSynthesis.getVoices(); } catch(e) {}
+  }, { once: true });
+});
+</script>
+</body>
+</html>

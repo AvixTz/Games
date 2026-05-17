@@ -1,0 +1,15 @@
+# Claude Code workspace
+.claude/
+
+# Playwright MCP output (test artifacts, screenshots, snapshots)
+.playwright-mcp/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Local logs / temp
+*.log
+*.tmp

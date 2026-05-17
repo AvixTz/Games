@@ -1,489 +1,398 @@
 <!DOCTYPE html>
 <html dir="rtl" lang="he">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>משחק זיכרון – מצב יחיד או שני שחקנים</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>משחק זיכרון · מגרש המשחקים</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Suez+One&family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <style>
+        .memory-board {
+            display: grid;
+            gap: 0.55rem;
+            width: 100%;
+            max-width: 640px;
+            margin: 0.5rem auto;
+            perspective: 800px;
+        }
+        .mcard {
+            position: relative;
+            aspect-ratio: 1;
+            cursor: pointer;
+            transform-style: preserve-3d;
+            transition: transform 0.5s cubic-bezier(.34,1.56,.64,1);
+            user-select: none;
+        }
+        .mcard.flipped, .mcard.matched {
+            transform: rotateY(180deg);
+        }
+        .mcard.matched { cursor: default; }
+        .mcard__face {
+            position: absolute;
+            inset: 0;
+            border: var(--border);
+            border-radius: 12px;
+            box-shadow: 3px 3px 0 var(--ink);
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            font-size: clamp(1.2rem, 4.5vw, 2.4rem);
+        }
+        .mcard__back {
+            background: linear-gradient(135deg, var(--c3) 0%, var(--c6) 100%);
+            color: var(--cream);
+            font-family: 'Suez One', serif;
+            font-size: 1.6rem;
+        }
+        .mcard__back::before {
+            content: "?";
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+        }
+        .mcard__front {
+            background: var(--cream);
+            transform: rotateY(180deg);
+        }
+        .mcard.matched .mcard__front {
+            background: var(--c4);
+            animation: matched-pop 0.45s cubic-bezier(.34,1.56,.64,1);
+        }
+        @keyframes matched-pop {
+            0%   { transform: rotateY(180deg) scale(1); }
+            50%  { transform: rotateY(180deg) scale(1.15); }
+            100% { transform: rotateY(180deg) scale(1); }
+        }
 
-  <!-- ספריית canvas-confetti ליצירת קונפטי -->
-  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+        /* size-aware grid */
+        .memory-board.size-easy   .mcard__face { font-size: 2.2rem; }
+        .memory-board.size-medium .mcard__face { font-size: 1.9rem; }
+        .memory-board.size-hard   .mcard__face { font-size: 1.6rem; }
+        .memory-board.size-extreme { max-width: 720px; gap: 0.35rem; }
+        .memory-board.size-extreme .mcard__face { font-size: 1.1rem; border-width: 2px; box-shadow: 2px 2px 0 var(--ink); }
 
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Varela+Round&display=swap');
-
-    :root {
-      --primary: #4A90E2;
-      --background: #f0f2f5;
-      --text: #2C3E50;
-      --board-light: #f0d9b5;
-      --board-dark: #b58863;
-      --highlight: rgba(155, 199, 0, 0.41);
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Varela Round', sans-serif;
-    }
-
-    body {
-      background-color: var(--background);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 2rem;
-    }
-
-    .game-container {
-      background: white;
-      border-radius: 20px;
-      padding: 2rem;
-      box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-      max-width: 1000px;
-      width: 100%;
-      position: relative;
-    }
-
-    .back-button {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      padding: 0.5rem 1rem;
-      background: white;
-      border: 2px solid var(--primary);
-      border-radius: 8px;
-      cursor: pointer;
-    }
-
-    .header h1 {
-      text-align: center;
-      margin-bottom: 1rem;
-    }
-
-    .game-settings {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-      padding: 1.5rem;
-      background: var(--board-light);
-      border-radius: 10px;
-    }
-
-    .setting-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .setting-label {
-      font-weight: bold;
-      color: var(--text);
-    }
-
-    select {
-      padding: 0.8rem 1rem;
-      border: 2px solid var(--primary);
-      border-radius: 8px;
-      font-size: 1rem;
-      cursor: pointer;
-      background: white;
-      transition: all 0.3s ease;
-    }
-
-    select:hover {
-      border-color: #357ABD;
-    }
-
-    .status {
-      text-align: center;
-      margin: 1rem 0;
-      padding: 1rem;
-      background: var(--board-light);
-      border-radius: 8px;
-      font-size: 1.2rem;
-      font-weight: bold;
-      min-height: 3rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .board-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin: 2rem 0;
-    }
-
-    .memory-board {
-      display: grid;
-      gap: 10px;
-      width: 100%;
-      max-width: 600px;
-    }
-
-    /* עיצוב הקלפים */
-    .card {
-      position: relative;
-      background-color: var(--board-dark);
-      border-radius: 8px;
-      cursor: pointer;
-      transition: transform 0.3s;
-      user-select: none;
-      height: 0;
-      padding-bottom: 100%;
-      overflow: hidden;
-    }
-
-    .card .symbol {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 4rem;
-      line-height: 1;
-      color: transparent; /* מוסתר בהתחלה */
-    }
-
-    /* כאשר הקלף "נגלה" או "התאים", נחשוף את הסמל */
-    .card.flipped .symbol,
-    .card.matched .symbol {
-      color: var(--text);
-    }
-
-    .card.flipped,
-    .card.matched {
-      background-color: var(--board-light);
-    }
-
-    .controls {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1rem;
-      margin-top: 2rem;
-    }
-
-    button {
-      padding: 0.8rem 1.5rem;
-      border: none;
-      border-radius: 10px;
-      background: var(--primary);
-      color: white;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    button:hover {
-      background: #357ABD;
-      transform: translateY(-2px);
-    }
-  </style>
+        .player-row {
+            display: flex;
+            gap: 0.7rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .player-chip {
+            background: var(--cream);
+            border: 2.5px solid var(--ink);
+            border-radius: 999px;
+            padding: 0.4rem 1rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+            box-shadow: 3px 3px 0 var(--ink);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            transition: transform 0.18s ease, background 0.18s ease;
+        }
+        .player-chip.active {
+            background: var(--c2);
+            transform: translateY(-3px) rotate(-2deg);
+        }
+        .player-chip .pc-val {
+            font-family: 'Suez One', serif;
+            font-size: 1.1rem;
+        }
+    </style>
 </head>
 <body>
-  <button class="back-button" onclick="window.location.href='index.html'">חזרה לתפריט</button>
-  
-  <div class="game-container">
-    <div class="header">
-      <h1>משחק זיכרון – יחיד או שני שחקנים</h1>
+<div class="page">
+
+    <div class="topbar">
+        <a class="back-btn" href="index.html">→ חזרה למגרש</a>
+        <h1 class="page-title">🎴 משחק זיכרון</h1>
     </div>
 
-    <div class="game-settings">
-      <!-- בחירת רמת קושי -->
-      <div class="setting-group">
-        <div class="setting-label">רמת קושי:</div>
-        <select id="difficulty" onchange="resetGame()">
-          <option value="easy">קל (4x4)</option>
-          <option value="medium">בינוני (4x6)</option>
-          <option value="hard">קשה (6x6)</option>
-          <option value="extreme">קשה מאוד (10x10)</option>
-        </select>
-      </div>
+    <details class="rules">
+        <summary>איך משחקים?</summary>
+        <ul>
+            <li>הפכו שני קלפים בכל תור — אם הסמלים תואמים, הזוג נשאר חשוף.</li>
+            <li>במצב <strong>שחקן יחיד</strong> — מצאו את כל הזוגות.</li>
+            <li>במצב <strong>שני שחקנים</strong> — קיבלתם זוג? התור נשאר אצלכם. החמצתם? התור עובר ליריב.</li>
+            <li>הניצחון: כשכל הזוגות נחשפו, מי שאסף יותר.</li>
+        </ul>
+    </details>
 
-      <!-- מצב שחקן יחיד או שני שחקנים -->
-      <div class="setting-group">
-        <div class="setting-label">מספר שחקנים:</div>
-        <select id="players" onchange="resetGame()">
-          <option value="1">שחקן יחיד</option>
-          <option value="2">שני שחקנים</option>
-        </select>
-      </div>
+    <div class="status" id="status">
+        <span class="status__msg" id="status-msg">🧠 זכרו את מיקומי הקלפים</span>
+        <div class="player-row" id="player-row">
+            <span class="player-chip" id="p1-chip">שחקן 1 <span class="pc-val" id="p1-score">0</span></span>
+            <span class="player-chip" id="p2-chip" style="display:none">שחקן 2 <span class="pc-val" id="p2-score">0</span></span>
+        </div>
     </div>
 
-    <div class="status" id="status">זכור את מיקומי הקלפים!</div>
+    <div class="card">
+        <div class="form-row">
+            <div class="form-field">
+                <label class="form-label" for="difficulty">רמת קושי</label>
+                <select id="difficulty" class="select" onchange="resetGame()">
+                    <option value="easy">קל · 4×4</option>
+                    <option value="medium">בינוני · 4×6</option>
+                    <option value="hard">קשה · 6×6</option>
+                    <option value="extreme">מסטר · 10×10</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label class="form-label" for="players">שחקנים</label>
+                <select id="players" class="select" onchange="resetGame()">
+                    <option value="1">שחקן יחיד</option>
+                    <option value="2">שני שחקנים</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn--pink" onclick="resetGame()">משחק חדש ↻</button>
+            </div>
+        </div>
 
-    <div class="board-container">
-      <div class="memory-board" id="board"></div>
+        <div class="memory-board" id="board"></div>
     </div>
 
-    <div class="controls">
-      <button onclick="resetGame()">משחק חדש</button>
-      <button onclick="showHelp()">הוראות משחק</button>
-    </div>
-  </div>
+    <footer class="footer">
+        <p>נבנה <span class="heart">♥</span> במיוחד לסקרנים הקטנים</p>
+    </footer>
+</div>
 
-  <script>
-    /* ========== משתנים גלובליים ========== */
+<!-- Win modal -->
+<div class="modal-backdrop" id="modal">
+    <div class="modal">
+        <h2 id="modal-title">🎉 ניצחון!</h2>
+        <p id="modal-text"></p>
+        <div class="modal-actions">
+            <button class="btn btn--pink" onclick="closeModal(); resetGame();">משחק חדש ↻</button>
+            <a class="btn btn--ghost" href="index.html">למגרש</a>
+        </div>
+    </div>
+</div>
+
+<script>
     let cards = [];
     let firstCardIndex = null;
     let lockBoard = false;
     let matchesFound = 0;
     let totalPairs = 0;
 
-    // מצב שחקנים
-    let playerMode = 1; // 1 = שחקן יחיד, 2 = שני שחקנים
+    let playerMode = 1;
     let currentPlayer = 1;
     let player1Score = 0;
     let player2Score = 0;
 
-    /* ========== אתחול המשחק ========== */
+    const SIZES = {
+        easy:    { rows: 4, cols: 4 },
+        medium:  { rows: 4, cols: 6 },
+        hard:    { rows: 6, cols: 6 },
+        extreme: { rows: 10, cols: 10 }
+    };
+
+    const SYMBOLS = ["⭐","🌟","✨","💫","🎈","🎁","🔔","🎵","🔥","💎","🔑","🧩",
+                     "🍀","🍎","🥕","🥑","🌻","🍔","🍕","⚽","🏀","🏓","🚗","✈️",
+                     "🚀","🐶","🐱","🐰","🐨","🦊","🐼","🦁","🐸","🦄","🐙","🦋",
+                     "🌈","🍩","🍓","🍌","🍒","🥝","🌮","🍿","🎮","🎨","🎯","🎪",
+                     "🪁","🛼"];
+
     window.onload = resetGame;
 
     function resetGame() {
-      // איפוס משתנים
-      firstCardIndex = null;
-      lockBoard = false;
-      matchesFound = 0;
-      player1Score = 0;
-      player2Score = 0;
-      currentPlayer = 1;
-
-      // קריאת הגדרות מה-HTML
-      const difficulty = document.getElementById("difficulty").value;
-      playerMode = parseInt(document.getElementById("players").value);
-
-      // הגדרת מספר שורות ועמודות
-      let rows, cols;
-      if (difficulty === "easy") { rows = 4; cols = 4; }
-      else if (difficulty === "medium") { rows = 4; cols = 6; }
-      else if (difficulty === "hard") { rows = 6; cols = 6; }
-      else if (difficulty === "extreme") { rows = 10; cols = 10; }
-
-      const totalCards = rows * cols;
-      totalPairs = totalCards / 2;
-
-      // יצירת הקלפים
-      generateCards(totalPairs);
-
-      // ציור הלוח
-      renderBoard(rows, cols);
-
-      // עדכון סטטוס
-      updateStatus("זכור את מיקומי הקלפים!");
-    }
-
-    /* ========== פונקציות עזר ========== */
-
-    // יצירת מערך הקלפים
-    function generateCards(numPairs) {
-      // סמלים – כוכבים וסמלים נוספים
-      const SYMBOLS = ["★","☆","✪","✰","✯","✩","✫","✬","✭","✦","✧","⭐","🌟","✨","💫","☄️","⚝","✹","✵","✶","⚙️","❄️","🍀","🍎","🥕","🥑","🌻","🍔","🍕","⚽","🏀","🏓","🚗","✈️","🚀","🎈","🎁","🔔","🎵","🔥","💎","🔑","🧩","🔒","🐶","🐱","🐰","🐨"];
-      let symbolsCopy = SYMBOLS.slice();
-      shuffle(symbolsCopy);
-
-      // בוחרים numPairs סמלים (כל סמל יופיע פעמיים)
-      let selectedSymbols = symbolsCopy.slice(0, numPairs);
-
-      // בניית המערך
-      cards = [];
-      selectedSymbols.forEach(symbol => {
-        cards.push({ symbol: symbol, flipped: false, matched: false });
-        cards.push({ symbol: symbol, flipped: false, matched: false });
-      });
-
-      // ערבוב סופי
-      shuffle(cards);
-    }
-
-    // ערבוב (Fisher-Yates)
-    function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
-    }
-
-    // ציור הלוח
-    function renderBoard(rows, cols) {
-      const boardElement = document.getElementById("board");
-      boardElement.innerHTML = "";
-      boardElement.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
-
-      cards.forEach((card, index) => {
-        const cardDiv = document.createElement("div");
-        cardDiv.className = "card";
-        cardDiv.dataset.index = index;
-
-        // span לסמל
-        const symbolSpan = document.createElement("span");
-        symbolSpan.className = "symbol";
-        symbolSpan.textContent = card.symbol;
-        cardDiv.appendChild(symbolSpan);
-
-        if (card.flipped || card.matched) {
-          cardDiv.classList.add(card.flipped ? "flipped" : "", card.matched ? "matched" : "");
-        }
-
-        cardDiv.addEventListener("click", () => handleCardClick(index));
-        boardElement.appendChild(cardDiv);
-      });
-    }
-
-    // טיפול בלחיצה על קלף
-    function handleCardClick(index) {
-      if (lockBoard) return;
-      const card = cards[index];
-      if (card.flipped || card.matched) return; // כבר הפוך או התאים קודם
-
-      card.flipped = true;
-      updateCardState(index);
-
-      // בחירה ראשונה
-      if (firstCardIndex === null) {
-        firstCardIndex = index;
-      } else {
-        // בדיקת התאמה
-        checkForMatch(firstCardIndex, index);
         firstCardIndex = null;
-      }
+        lockBoard = false;
+        matchesFound = 0;
+        player1Score = 0;
+        player2Score = 0;
+        currentPlayer = 1;
+        closeModal();
+
+        const difficulty = document.getElementById("difficulty").value;
+        playerMode = parseInt(document.getElementById("players").value);
+
+        const { rows, cols } = SIZES[difficulty];
+        totalPairs = (rows * cols) / 2;
+
+        generateCards(totalPairs);
+        renderBoard(rows, cols, difficulty);
+        updateScores();
+        updateStatus();
     }
 
-    // עדכון מצב הקלף ב-DOM
+    function generateCards(numPairs) {
+        const symbolsCopy = SYMBOLS.slice();
+        shuffle(symbolsCopy);
+        const selected = symbolsCopy.slice(0, numPairs);
+        cards = [];
+        selected.forEach(symbol => {
+            cards.push({ symbol, flipped: false, matched: false });
+            cards.push({ symbol, flipped: false, matched: false });
+        });
+        shuffle(cards);
+    }
+
+    function shuffle(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+    }
+
+    function renderBoard(rows, cols, difficulty) {
+        const boardElement = document.getElementById("board");
+        boardElement.innerHTML = "";
+        boardElement.className = "memory-board size-" + difficulty;
+        boardElement.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+        cards.forEach((card, index) => {
+            const wrap = document.createElement("div");
+            wrap.className = "mcard";
+            wrap.dataset.index = index;
+
+            const back = document.createElement("div");
+            back.className = "mcard__face mcard__back";
+
+            const front = document.createElement("div");
+            front.className = "mcard__face mcard__front";
+            front.textContent = card.symbol;
+
+            wrap.appendChild(back);
+            wrap.appendChild(front);
+            wrap.addEventListener("click", () => handleCardClick(index));
+            boardElement.appendChild(wrap);
+        });
+    }
+
+    function handleCardClick(index) {
+        if (lockBoard) return;
+        const card = cards[index];
+        if (card.flipped || card.matched) return;
+
+        card.flipped = true;
+        updateCardState(index);
+
+        if (firstCardIndex === null) {
+            firstCardIndex = index;
+        } else {
+            checkForMatch(firstCardIndex, index);
+            firstCardIndex = null;
+        }
+    }
+
     function updateCardState(index) {
-      const card = cards[index];
-      const cardDiv = document.querySelector(`.card[data-index='${index}']`);
-      if (!cardDiv) return;
-
-      cardDiv.classList.toggle("flipped", card.flipped);
-      cardDiv.classList.toggle("matched", card.matched);
+        const card = cards[index];
+        const el = document.querySelector(`.mcard[data-index='${index}']`);
+        if (!el) return;
+        el.classList.toggle("flipped", card.flipped);
+        el.classList.toggle("matched", card.matched);
     }
 
-    // בדיקת התאמה
     function checkForMatch(index1, index2) {
-      const card1 = cards[index1];
-      const card2 = cards[index2];
-
-      if (card1.symbol === card2.symbol) {
-        // יש התאמה
-        card1.matched = true;
-        card2.matched = true;
-        matchesFound++;
-        updateCardState(index1);
-        updateCardState(index2);
-
-        // ניקוד במצב שני שחקנים
-        if (playerMode === 2) {
-          if (currentPlayer === 1) {
-            player1Score++;
-          } else {
-            player2Score++;
-          }
-        }
-
-        // בדיקת סיום
-        if (matchesFound === totalPairs) {
-          endGame();
+        const c1 = cards[index1];
+        const c2 = cards[index2];
+        if (c1.symbol === c2.symbol) {
+            c1.matched = true;
+            c2.matched = true;
+            matchesFound++;
+            setTimeout(() => {
+                updateCardState(index1);
+                updateCardState(index2);
+            }, 250);
+            if (playerMode === 2) {
+                if (currentPlayer === 1) player1Score++; else player2Score++;
+                updateScores();
+            }
+            if (matchesFound === totalPairs) {
+                setTimeout(endGame, 500);
+            } else {
+                updateStatus();
+            }
         } else {
-          // במצב שני שחקנים – ממשיך באותו תור
-          updateStatus();
+            lockBoard = true;
+            setTimeout(() => {
+                c1.flipped = false;
+                c2.flipped = false;
+                updateCardState(index1);
+                updateCardState(index2);
+                lockBoard = false;
+                if (playerMode === 2) {
+                    currentPlayer = currentPlayer === 1 ? 2 : 1;
+                }
+                updateStatus();
+            }, 900);
         }
-      } else {
-        // אין התאמה
-        lockBoard = true;
-        setTimeout(() => {
-          card1.flipped = false;
-          card2.flipped = false;
-          updateCardState(index1);
-          updateCardState(index2);
-          lockBoard = false;
-
-          // במצב שני שחקנים – מעבירים תור
-          if (playerMode === 2) {
-            currentPlayer = (currentPlayer === 1) ? 2 : 1;
-          }
-          updateStatus();
-        }, 1000);
-      }
     }
 
-    // סיום משחק
+    function updateScores() {
+        document.getElementById("p1-score").textContent = player1Score;
+        document.getElementById("p2-score").textContent = player2Score;
+        document.getElementById("p2-chip").style.display = playerMode === 2 ? "" : "none";
+        document.getElementById("p1-chip").classList.toggle("active", playerMode === 2 && currentPlayer === 1);
+        document.getElementById("p2-chip").classList.toggle("active", playerMode === 2 && currentPlayer === 2);
+    }
+
+    function updateStatus() {
+        const statusEl  = document.getElementById("status");
+        const msgEl     = document.getElementById("status-msg");
+        statusEl.classList.remove("status--win","status--lose","status--draw","status--turn");
+        statusEl.classList.add("status--turn");
+        if (playerMode === 1) {
+            msgEl.textContent = `🧠 התקדמות: ${matchesFound} / ${totalPairs}`;
+        } else {
+            msgEl.textContent = `תור שחקן ${currentPlayer}`;
+            updateScores();
+        }
+    }
+
     function endGame() {
-      let resultText = "";
-      if (playerMode === 1) {
-        resultText = "כל הכבוד! ניצחת!";
-      } else {
-        // שני שחקנים – קביעת מנצח
-        if (player1Score > player2Score) {
-          resultText = "שחקן 1 ניצח!";
-        } else if (player2Score > player1Score) {
-          resultText = "שחקן 2 ניצח!";
+        const statusEl   = document.getElementById("status");
+        const modalTitle = document.getElementById("modal-title");
+        const modalText  = document.getElementById("modal-text");
+
+        let title, text, cls = "status--win";
+        if (playerMode === 1) {
+            title = "🎉 כל הכבוד!";
+            text  = `מצאת את כל ${totalPairs} הזוגות.`;
         } else {
-          resultText = "תיקו!";
+            if (player1Score > player2Score) {
+                title = "🥇 שחקן 1 ניצח!";
+                text  = `תוצאה: ${player1Score} מול ${player2Score}.`;
+            } else if (player2Score > player1Score) {
+                title = "🥇 שחקן 2 ניצח!";
+                text  = `תוצאה: ${player2Score} מול ${player1Score}.`;
+            } else {
+                title = "🤝 תיקו!";
+                text  = `שני השחקנים סיימו עם ${player1Score} זוגות.`;
+                cls   = "status--draw";
+            }
         }
-      }
+        modalTitle.textContent = title;
+        modalText.textContent  = text;
+        document.getElementById("status-msg").textContent = title;
+        statusEl.classList.remove("status--turn");
+        statusEl.classList.add(cls);
 
-      updateStatus(resultText);
-      launchConfetti(); // הפעלת קונפטי
+        launchConfetti();
+        setTimeout(openModal, 500);
     }
 
-    // עדכון סטטוס על המסך
-    function updateStatus(customText) {
-      const statusEl = document.getElementById("status");
-      if (customText) {
-        statusEl.textContent = customText;
-        return;
-      }
-
-      // אם אין טקסט מותאם, נעדכן בהתאם למצב
-      if (playerMode === 1) {
-        statusEl.textContent = "זכור את מיקומי הקלפים!";
-      } else {
-        // מצב שני שחקנים – הצגת תור וציונים
-        statusEl.textContent = `תור שחקן ${currentPlayer} | תוצאה: שחקן 1: ${player1Score}, שחקן 2: ${player2Score}`;
-      }
-    }
-
-    // הפעלת קונפטי
     function launchConfetti() {
-      const duration = 3 * 1000; // 3 שניות
-      const end = Date.now() + duration;
-
-      (function frame() {
-        // שיגור חלקיקי קונפטי משני צידי המסך
-        confetti({
-          particleCount: 3,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 }
-        });
-        confetti({
-          particleCount: 3,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 }
-        });
-
-        // המשך כל עוד לא חלף הזמן
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      })();
+        const end = Date.now() + 2500;
+        const colors = ["#FF3D7F","#FFC02E","#3D5AFE","#00C896","#9B59FF"];
+        (function frame() {
+            confetti({ particleCount: 4, angle: 60,  spread: 55, origin: { x: 0 }, colors });
+            confetti({ particleCount: 4, angle: 120, spread: 55, origin: { x: 1 }, colors });
+            if (Date.now() < end) requestAnimationFrame(frame);
+        })();
     }
 
-    // הצגת הוראות
-    function showHelp() {
-      alert(
-        "המטרה היא לזכור את מיקומי הקלפים ולמצוא זוגות תואמים.\n" +
-        "לחץ על קלף כדי לחשוף אותו, ובחר זוג שתואם את הסמל.\n\n" +
-        "במצב שני שחקנים:\n" +
-        "• אם מצאת התאמה, אתה זוכה בנקודה וממשיך באותו תור.\n" +
-        "• אם אין התאמה, התור עובר לשחקן השני.\n\n" +
-        "בהצלחה!"
-      );
-    }
-  </script>
+    function openModal()  { document.getElementById("modal").classList.add("is-open"); }
+    function closeModal() { document.getElementById("modal").classList.remove("is-open"); }
+    document.getElementById("modal").addEventListener("click", e => {
+        if (e.target.id === "modal") closeModal();
+    });
+</script>
 </body>
 </html>

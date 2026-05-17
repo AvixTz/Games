@@ -3,432 +3,361 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>משחק איקס עיגול</title>
+    <title>איקס עיגול · מגרש המשחקים</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Suez+One&family=Rubik:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="theme.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Varela+Round&display=swap');
-
-        :root {
-            --primary: #4A90E2;
-            --background: #f0f2f5;
-            --text: #2C3E50;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Varela Round', sans-serif;
-        }
-
-        body {
-            background-color: var(--background);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 2rem;
-        }
-
-        .game-container {
-            background: white;
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            max-width: 500px;
-            width: 100%;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .game-board {
+        .ttt-board {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin: 2rem auto;
-            max-width: 300px;
+            gap: 0.7rem;
+            width: 100%;
+            max-width: 360px;
+            margin: 0.8rem auto;
+            justify-self: center;
         }
-
         .cell {
             aspect-ratio: 1;
-            background: #f8f9fa;
-            border: 2px solid #dee2e6;
-            border-radius: 10px;
-            font-size: 2.5rem;
+            background: var(--cream);
+            border: var(--border-thick);
+            border-radius: 14px;
+            box-shadow: 4px 4px 0 var(--ink);
+            font-family: 'Suez One', serif;
+            font-size: 3.4rem;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+            user-select: none;
+            line-height: 1;
         }
-
-        .cell:hover:not(.x):not(.o) {
-            background: #e9ecef;
+        .cell:not(.x):not(.o):hover {
+            background: var(--paper-2);
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0 var(--ink);
         }
-
-        .cell.x {
-            color: #dc3545;
+        .cell.x { color: var(--c1); }
+        .cell.o { color: var(--c3); }
+        .cell.win {
+            background: var(--c2);
+            animation: win-pulse 0.6s ease-in-out 2;
         }
-
-        .cell.o {
-            color: #28a745;
+        @keyframes win-pulse {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.08); }
         }
-
-        .controls {
+        .cell.disabled { cursor: default; }
+        .game-card {
             display: grid;
             gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        select, button {
-            padding: 0.8rem 1.5rem;
-            border-radius: 10px;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            width: 100%;
-        }
-
-        select {
-            border: 2px solid var(--primary);
-            background: white;
-        }
-
-        button {
-            background: var(--primary);
-            color: white;
-            border: none;
-        }
-
-        button:hover {
-            background: #357ABD;
-        }
-
-        .status {
-            text-align: center;
-            margin: 1rem 0;
-            font-size: 1.2rem;
-            color: var(--text);
-            min-height: 2rem;
-        }
-
-        .score {
-            display: flex;
-            justify-content: space-around;
-            margin: 1rem 0;
-        }
-
-        .score-item {
-            text-align: center;
-        }
-
-        .score-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary);
         }
     </style>
 </head>
 <body>
-<button class="back-button" onclick="window.location.href='index.html'">חזרה לתפריט</button>
-    
-    <div class="game-container">
-        <div class="header">
-            <h1>איקס עיגול</h1>
-        </div>
+<div class="page">
 
-        <div class="score">
-            <div class="score-item">
-                <div>שחקן 1</div>
-                <div class="score-value" id="player1-score">0</div>
-            </div>
-            <div class="score-item">
-                <div id="player2-label">שחקן 2</div>
-                <div class="score-value" id="player2-score">0</div>
-            </div>
-        </div>
+    <div class="topbar">
+        <a class="back-btn" href="index.html">→ חזרה למגרש</a>
+        <h1 class="page-title">⭕ איקס עיגול</h1>
+    </div>
 
-        <div class="status" id="status">תור שחקן 1</div>
-        
-        <div class="game-board" id="board"></div>
+    <details class="rules">
+        <summary>איך משחקים?</summary>
+        <ul>
+            <li>בכל תור שחקן מסמן ריבוע ריק — שחקן 1 ב־<strong style="color:var(--c1)">X</strong>, שחקן 2 ב־<strong style="color:var(--c3)">O</strong>.</li>
+            <li>המנצח הוא הראשון שמשלים שלושה סימנים ברצף — בשורה, בעמודה או באלכסון.</li>
+            <li>אם הלוח מתמלא בלי מנצח — תיקו.</li>
+            <li>במצב מול המחשב — אתם משחקים X. המחשב משחק חזק, אבל זה לא בלתי אפשרי.</li>
+        </ul>
+    </details>
 
-        <div class="controls">
-            <select id="gameMode" onchange="changeGameMode()">
-                <option value="2players">שחקן מול שחקן</option>
-                <option value="computer">שחקן מול מחשב</option>
-            </select>
-            <button onclick="resetGame()">משחק חדש</button>
+    <div class="status" id="status">
+        <span class="status__msg">תור: <strong id="turn-label" style="color:var(--c1)">שחקן 1</strong></span>
+        <div class="chip-row" style="margin:0">
+            <span class="chip chip--pink"><span class="chip-label">X</span> <span class="chip-value" id="player1-score">0</span></span>
+            <span class="chip chip--blue"><span class="chip-label" id="player2-label">O</span> <span class="chip-value" id="player2-score">0</span></span>
         </div>
     </div>
 
-    <script>
-        let board = ['', '', '', '', '', '', '', '', ''];
-        let currentPlayer = 'X';
-        let isGameActive = true;
-        let isComputerGame = false;
-        let scores = { X: 0, O: 0 };
+    <div class="card game-card">
+        <div class="ttt-board" id="board" role="grid" aria-label="לוח איקס עיגול"></div>
 
-        // יצירת לוח המשחק
-        function createBoard() {
-            const boardElement = document.getElementById('board');
-            boardElement.innerHTML = '';
-            
-            for (let i = 0; i < 9; i++) {
-                const cell = document.createElement('div');
-                cell.classList.add('cell');
-                cell.setAttribute('data-index', i);
-                cell.addEventListener('click', () => handleCellClick(i));
-                boardElement.appendChild(cell);
-            }
+        <div class="form-row" style="margin:0">
+            <div class="form-field">
+                <label class="form-label" for="gameMode">מצב משחק</label>
+                <select class="select" id="gameMode" onchange="changeGameMode()">
+                    <option value="2players">שחקן מול שחקן</option>
+                    <option value="computer">שחקן מול מחשב</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn--pink" onclick="resetGame()">משחק חדש ↻</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>נבנה <span class="heart">♥</span> במיוחד לסקרנים הקטנים</p>
+    </footer>
+</div>
+
+<!-- Win modal -->
+<div class="modal-backdrop" id="modal">
+    <div class="modal">
+        <h2 id="modal-title">🎉 ניצחון!</h2>
+        <p id="modal-text"></p>
+        <div class="modal-actions">
+            <button class="btn btn--pink" onclick="closeModal(); resetGame();">סיבוב נוסף ↻</button>
+            <a class="btn btn--ghost" href="index.html">למגרש</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    let board = ['', '', '', '', '', '', '', '', ''];
+    let currentPlayer = 'X';
+    let isGameActive = true;
+    let isComputerGame = false;
+    let scores = { X: 0, O: 0 };
+
+    const WIN_LINES = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+    ];
+
+    function createBoard() {
+        const boardElement = document.getElementById('board');
+        boardElement.innerHTML = '';
+        for (let i = 0; i < 9; i++) {
+            const cell = document.createElement('div');
+            cell.classList.add('cell');
+            cell.setAttribute('role', 'gridcell');
+            cell.setAttribute('data-index', i);
+            cell.addEventListener('click', () => handleCellClick(i));
+            boardElement.appendChild(cell);
+        }
+    }
+
+    function handleCellClick(index) {
+        if (!isGameActive || board[index] !== '' ||
+            (isComputerGame && currentPlayer === 'O')) return;
+        makeMove(index);
+    }
+
+    function makeMove(index) {
+        board[index] = currentPlayer;
+        updateCell(index);
+
+        const winLine = getWinLine();
+        if (winLine) {
+            endGame(false, winLine);
+            return;
+        }
+        if (checkDraw()) {
+            endGame(true);
+            return;
         }
 
-        // טיפול בלחיצה על תא
-        function handleCellClick(index) {
-            if (!isGameActive || board[index] !== '' || 
-                (isComputerGame && currentPlayer === 'O')) return;
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        updateStatus();
 
-            makeMove(index);
+        if (isComputerGame && currentPlayer === 'O' && isGameActive) {
+            setTimeout(computerMove, 450);
         }
+    }
 
-        // ביצוע מהלך
-        function makeMove(index) {
-            board[index] = currentPlayer;
-            updateCell(index);
+    function computerMove() {
+        const bestMove = findBestMove();
+        makeMove(bestMove);
+    }
 
-            if (checkWin()) {
-                endGame(false);
-                return;
-            }
-            if (checkDraw()) {
-                endGame(true);
-                return;
-            }
-
-            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
-            updateStatus();
-
-            if (isComputerGame && currentPlayer === 'O' && isGameActive) {
-                setTimeout(computerMove, 500);
+    function findBestMove() {
+        const emptySquares = board.filter(c => c === '').length;
+        if (emptySquares === 9) {
+            const firstMoves = [0, 2, 4, 6, 8];
+            return firstMoves[Math.floor(Math.random() * firstMoves.length)];
+        }
+        if (emptySquares === 8) {
+            if (board[4] === 'X') {
+                const corners = [0, 2, 6, 8];
+                return corners[Math.floor(Math.random() * corners.length)];
+            } else if ([0, 2, 6, 8].some(i => board[i] === 'X')) {
+                return 4;
             }
         }
+        const winningMove = findWinningMove('O');
+        if (winningMove !== -1) return winningMove;
+        const blockingMove = findWinningMove('X');
+        if (blockingMove !== -1) return blockingMove;
 
-        // מהלך המחשב
-        function computerMove() {
-            const bestMove = findBestMove();
-            makeMove(bestMove);
-        }
-
-        // חיפוש המהלך הטוב ביותר
-        function findBestMove() {
-            // מספר התאים הריקים
-            const emptySquares = board.filter(cell => cell === '').length;
-            
-            // אסטרטגיה למהלך ראשון
-            if (emptySquares === 9) {
-                // במהלך הראשון - לקחת באופן אקראי פינה או מרכז
-                const firstMoves = [0, 2, 4, 6, 8];
-                return firstMoves[Math.floor(Math.random() * firstMoves.length)];
-            }
-            
-            // אסטרטגיה למהלך שני
-            if (emptySquares === 8) {
-                if (board[4] === 'X') {
-                    // אם השחקן לקח מרכז - לקחת פינה
-                    const corners = [0, 2, 6, 8];
-                    return corners[Math.floor(Math.random() * corners.length)];
-                } else if (['0', '2', '6', '8'].some(i => board[i] === 'X')) {
-                    // אם השחקן לקח פינה - לקחת מרכז
-                    return 4;
+        let bestScore = -Infinity;
+        let bestMoves = [];
+        for (let i = 0; i < 9; i++) {
+            if (board[i] === '') {
+                board[i] = 'O';
+                const score = minimax(board, 0, false, -Infinity, Infinity);
+                board[i] = '';
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMoves = [i];
+                } else if (score === bestScore) {
+                    bestMoves.push(i);
                 }
             }
+        }
+        return bestMoves[Math.floor(Math.random() * bestMoves.length)];
+    }
 
-            // בדיקת מהלך מנצח מיידי
-            const winningMove = findWinningMove('O');
-            if (winningMove !== -1) return winningMove;
+    function minimax(b, depth, isMax, alpha, beta) {
+        const winner = checkWinnerSymbol();
+        if (winner) return winner === 'O' ? 10 - depth : depth - 10;
+        if (b.every(c => c !== '')) return 0;
 
-            // בדיקת חסימת מהלך מנצח של היריב
-            const blockingMove = findWinningMove('X');
-            if (blockingMove !== -1) return blockingMove;
-
-            // חיפוש המהלך הטוב ביותר באמצעות מינימקס
-            let bestScore = -Infinity;
-            let bestMove = -1;
-            let bestMoves = [];
-
+        if (isMax) {
+            let max = -Infinity;
             for (let i = 0; i < 9; i++) {
-                if (board[i] === '') {
-                    board[i] = 'O';
-                    const score = minimax(board, 0, false, -Infinity, Infinity);
+                if (b[i] === '') {
+                    b[i] = 'O';
+                    max = Math.max(max, minimax(b, depth + 1, false, alpha, beta));
+                    b[i] = '';
+                    alpha = Math.max(alpha, max);
+                    if (beta <= alpha) break;
+                }
+            }
+            return max;
+        } else {
+            let min = Infinity;
+            for (let i = 0; i < 9; i++) {
+                if (b[i] === '') {
+                    b[i] = 'X';
+                    min = Math.min(min, minimax(b, depth + 1, true, alpha, beta));
+                    b[i] = '';
+                    beta = Math.min(beta, min);
+                    if (beta <= alpha) break;
+                }
+            }
+            return min;
+        }
+    }
+
+    function checkWinnerSymbol() {
+        for (const [a, b, c] of WIN_LINES) {
+            if (board[a] && board[a] === board[b] && board[a] === board[c]) return board[a];
+        }
+        return null;
+    }
+
+    function getWinLine() {
+        for (const line of WIN_LINES) {
+            const [a, b, c] = line;
+            if (board[a] && board[a] === board[b] && board[a] === board[c]) return line;
+        }
+        return null;
+    }
+
+    function findWinningMove(symbol) {
+        for (let i = 0; i < 9; i++) {
+            if (board[i] === '') {
+                board[i] = symbol;
+                if (checkWinnerSymbol() === symbol) {
                     board[i] = '';
-                    
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestMoves = [i];
-                    } else if (score === bestScore) {
-                        bestMoves.push(i);
-                    }
+                    return i;
                 }
-            }
-
-            // בחירה אקראית מבין המהלכים הטובים ביותר
-            return bestMoves[Math.floor(Math.random() * bestMoves.length)];
-        }
-
-        // פונקצית מינימקס עם חיתוך אלפא-בטא
-        function minimax(board, depth, isMaximizing, alpha, beta) {
-            // בדיקת מצב סופי
-            const result = checkGameResult();
-            if (result !== null) {
-                return result === 'O' ? 10 - depth : result === 'X' ? depth - 10 : 0;
-            }
-
-            if (isMaximizing) {
-                let maxScore = -Infinity;
-                for (let i = 0; i < 9; i++) {
-                    if (board[i] === '') {
-                        board[i] = 'O';
-                        const score = minimax(board, depth + 1, false, alpha, beta);
-                        board[i] = '';
-                        maxScore = Math.max(maxScore, score);
-                        alpha = Math.max(alpha, score);
-                        if (beta <= alpha) break;
-                    }
-                }
-                return maxScore;
-            } else {
-                let minScore = Infinity;
-                for (let i = 0; i < 9; i++) {
-                    if (board[i] === '') {
-                        board[i] = 'X';
-                        const score = minimax(board, depth + 1, true, alpha, beta);
-                        board[i] = '';
-                        minScore = Math.min(minScore, score);
-                        beta = Math.min(beta, score);
-                        if (beta <= alpha) break;
-                    }
-                }
-                return minScore;
+                board[i] = '';
             }
         }
+        return -1;
+    }
 
-        // בדיקת מצב משחק
-        function checkGameResult() {
-            // בדיקת ניצחון
-            const winner = checkWinnerSymbol();
-            if (winner) return winner;
-            
-            // בדיקת תיקו
-            if (board.every(cell => cell !== '')) return 'draw';
-            
-            return null;
+    function updateCell(index) {
+        const cell = document.querySelector(`[data-index="${index}"]`);
+        cell.textContent = board[index];
+        cell.classList.add(board[index].toLowerCase(), 'disabled');
+    }
+
+    function checkDraw() {
+        return board.every(cell => cell !== '');
+    }
+
+    function endGame(isDraw, winLine) {
+        isGameActive = false;
+        const modalTitle = document.getElementById('modal-title');
+        const modalText  = document.getElementById('modal-text');
+        const statusEl   = document.getElementById('status');
+
+        if (isDraw) {
+            modalTitle.textContent = '🤝 תיקו!';
+            modalText.textContent = 'אף אחד לא ניצח. סיבוב נוסף?';
+            statusEl.classList.remove('status--turn','status--win');
+            statusEl.classList.add('status--draw');
+            document.getElementById('turn-label').textContent = 'תיקו';
+            document.getElementById('turn-label').style.color = 'var(--ink)';
+        } else {
+            if (winLine) winLine.forEach(i =>
+                document.querySelector(`[data-index="${i}"]`).classList.add('win'));
+            const isHuman = !isComputerGame || currentPlayer === 'X';
+            const name = currentPlayer === 'X' ? 'שחקן 1' : (isComputerGame ? 'המחשב' : 'שחקן 2');
+            modalTitle.textContent = isHuman ? '🎉 ניצחון!' : '🤖 המחשב ניצח';
+            modalText.textContent = `${name} ניצח${currentPlayer === 'O' && isComputerGame ? '' : ''} בסיבוב הזה.`;
+            statusEl.classList.remove('status--turn','status--draw');
+            statusEl.classList.add(isHuman ? 'status--win' : 'status--lose');
+            document.getElementById('turn-label').textContent = `${name} ניצח!`;
+            document.getElementById('turn-label').style.color =
+                currentPlayer === 'X' ? 'var(--c1)' : 'var(--c3)';
+            scores[currentPlayer]++;
+            document.getElementById(`player${currentPlayer === 'X' ? '1' : '2'}-score`).textContent =
+                scores[currentPlayer];
         }
+        setTimeout(openModal, 600);
+    }
 
-        // בדיקת סימן מנצח
-        function checkWinnerSymbol() {
-            const lines = [
-                [0, 1, 2], [3, 4, 5], [6, 7, 8], // שורות
-                [0, 3, 6], [1, 4, 7], [2, 5, 8], // עמודות
-                [0, 4, 8], [2, 4, 6] // אלכסונים
-            ];
-
-            for (const [a, b, c] of lines) {
-                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-                    return board[a];
-                }
-            }
-            return null;
+    function updateStatus() {
+        if (!isGameActive) return;
+        const statusEl = document.getElementById('status');
+        statusEl.classList.remove('status--win','status--lose','status--draw');
+        statusEl.classList.add('status--turn');
+        const turnLabel = document.getElementById('turn-label');
+        if (currentPlayer === 'X') {
+            turnLabel.textContent = 'שחקן 1 (X)';
+            turnLabel.style.color = 'var(--c1)';
+        } else {
+            turnLabel.textContent = isComputerGame ? 'המחשב (O)' : 'שחקן 2 (O)';
+            turnLabel.style.color = 'var(--c3)';
         }
+    }
 
-        // חיפוש מהלך מנצח
-        function findWinningMove(symbol) {
-            for (let i = 0; i < 9; i++) {
-                if (board[i] === '') {
-                    board[i] = symbol;
-                    if (checkWinnerSymbol() === symbol) {
-                        board[i] = '';
-                        return i;
-                    }
-                    board[i] = '';
-                }
-            }
-            return -1;
-        }
+    function changeGameMode() {
+        isComputerGame = document.getElementById('gameMode').value === 'computer';
+        document.getElementById('player2-label').textContent = isComputerGame ? 'מחשב' : 'O';
+        resetGame();
+    }
 
-        // עדכון תצוגת התא
-        function updateCell(index) {
-            const cell = document.querySelector(`[data-index="${index}"]`);
-            cell.textContent = board[index];
-            cell.classList.add(board[index].toLowerCase());
-        }
+    function resetGame() {
+        board = ['', '', '', '', '', '', '', '', ''];
+        currentPlayer = 'X';
+        isGameActive = true;
+        const cells = document.getElementsByClassName('cell');
+        Array.from(cells).forEach(cell => {
+            cell.textContent = '';
+            cell.className = 'cell';
+        });
+        updateStatus();
+        closeModal();
+    }
 
-        // בדיקת ניצחון
-        function checkWin() {
-            const winConditions = [
-                [0, 1, 2], [3, 4, 5], [6, 7, 8], // שורות
-                [0, 3, 6], [1, 4, 7], [2, 5, 8], // עמודות
-                [0, 4, 8], [2, 4, 6] // אלכסונים
-            ];
+    function openModal()  { document.getElementById('modal').classList.add('is-open'); }
+    function closeModal() { document.getElementById('modal').classList.remove('is-open'); }
+    document.getElementById('modal').addEventListener('click', e => {
+        if (e.target.id === 'modal') closeModal();
+    });
 
-            return winConditions.some(condition => {
-                return condition.every(index => {
-                    return board[index] === currentPlayer;
-                });
-            });
-        }
-
-        // בדיקת תיקו
-        function checkDraw() {
-            return board.every(cell => cell !== '');
-        }
-
-        // סיום משחק
-        function endGame(isDraw) {
-            isGameActive = false;
-            if (isDraw) {
-                document.getElementById('status').textContent = 'תיקו!';
-            } else {
-                const winner = currentPlayer === 'X' ? '1' : (isComputerGame ? 'מחשב' : '2');
-                document.getElementById('status').textContent = `שחקן ${winner} ניצח!`;
-                scores[currentPlayer]++;
-                document.getElementById(`player${currentPlayer === 'X' ? '1' : '2'}-score`).textContent = 
-                    scores[currentPlayer];
-            }
-        }
-
-        // עדכון סטטוס
-        function updateStatus() {
-            if (!isGameActive) return;
-            const currentPlayerNumber = currentPlayer === 'X' ? '1' : (isComputerGame ? 'מחשב' : '2');
-            document.getElementById('status').textContent = `תור שחקן ${currentPlayerNumber}`;
-        }
-
-        // שינוי מצב משחק
-        function changeGameMode() {
-            isComputerGame = document.getElementById('gameMode').value === 'computer';
-            document.getElementById('player2-label').textContent = 
-                isComputerGame ? 'מחשב' : 'שחקן 2';
-            resetGame();
-        }
-
-        // איפוס משחק
-        function resetGame() {
-            board = ['', '', '', '', '', '', '', '', ''];
-            currentPlayer = 'X';
-            isGameActive = true;
-
-            const cells = document.getElementsByClassName('cell');
-            Array.from(cells).forEach(cell => {
-                cell.textContent = '';
-                cell.className = 'cell';
-            });
-
-            updateStatus();
-        }
-
-        // אתחול המשחק
-        createBoard();
-    </script>
+    createBoard();
+    updateStatus();
+</script>
 </body>
 </html>
